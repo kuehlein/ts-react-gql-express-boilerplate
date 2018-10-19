@@ -1,0 +1,22 @@
+{
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "jsRules": {
+    "max-line-length": {
+      "options": [120]
+    }
+  },
+  "rules": {
+    "curly": [true, "ignore-same-line"],
+    "defaultSeverity": "error",
+    "max-line-length": {
+      "options": [120]
+    },
+    "new-parens": true,
+    "no-arg": true,
+    "no-conditional-assignment": true,
+    "no-console": {
+      "options": ["debug", "info", "log", "time", "timeEnd", "trace"],
+      "severity": "warning"
+    }
+  }
+}

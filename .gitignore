@@ -1,0 +1,11 @@
+# dependencies
+/node_modules
+
+# secrets
+secrets.js
+
+# build
+/public/dist
+
+# npm
+npm-debug.log
