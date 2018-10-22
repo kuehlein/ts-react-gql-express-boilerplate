@@ -3,11 +3,9 @@ import chalk from "chalk";
 import compression from "compression";
 import express from "express";
 // import session from "express-session";
-import fs from "fs";
 import morgan from "morgan";
 // import passport from "passport";
 import path from "path";
-import tsc, { TranspileOptions } from "typescript";
 import webpack, { Compiler, Configuration } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
@@ -45,11 +43,52 @@ export default class Server {
     //   }
     // };
 
+    /**
+     * * have a main `tsconfig`
+     *    * extend it with the folders/files i want to compile
+     *    * call `tsc` with the desired extended config
+     *
+     *  ? "include": ["webpack.config.*.ts", "./client", "./server", "*.ts"]
+     */
+
+    // const { spawn } = require("child_process");
+    // const child = spawn("webpack", [
+    //   "--config=public/dist/ts-sourcemap/webpack.dev.config.js" //  might need to feed it the tsconfig + tslint
+    // ]);
+
+    // // exit, disconnect, error, close, and message.
+    // // child.stdin, child.stdout, and child.stderr
+
+    // child.stdout.on("data", data => {
+    //   console.log(`child stdout:\n${data}`);
+    // });
+
+    // child.on("exit", (code, signal) =>
+    //   console.log(
+    //     `child process exited with\ncode ${code} and signal ${signal}`
+    //   )
+    // );
+
     // ! vvv
     // const exec = require("child_process").exec;
     // exec("webpack.dev.config.js", (err, stdout, stderr) => {
     //   //   stdout is the stuff i need?
     //   console.log("------------", stdout);
+    // });
+    // orrrr
+    // const { spawn } = require("child_process");
+    // const ls = spawn("ls", ["-lh", "/usr"]);
+
+    // ls.stdout.on("data", data => {
+    //   console.log(`stdout: ${data}`);
+    // });
+
+    // ls.stderr.on("data", data => {
+    //   console.log(`stderr: ${data}`);
+    // });
+
+    // ls.on("close", code => {
+    //   console.log(`child process exited with code ${code}`);
     // });
 
     // fs.readFile(
@@ -65,11 +104,11 @@ export default class Server {
       .then(() => this.createApp())
       .then(() => this.startListening());
 
-    // const buildAndServe: Promise<void> = this.webpack(config).then(() =>
-    //   this.staticallyServeFiles()
-    // );
+    const buildAndServe: Promise<void> = this.webpack().then(() =>
+      this.staticallyServeFiles()
+    );
 
-    // Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
+    Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
   }
 
   /**
@@ -202,39 +241,25 @@ export default class Server {
    * webpack
    *   *NOTE* --- Do not use nodemon or anything that restarts server... // ! details ???
    */
-  private async webpack(config /* : Configuration */): Promise<void> {
+  private async webpack(/* config /* : Configuration */): Promise<void> {
     // ! create config file for whole project and one for just the first three
     // * dont overlap compiling
-    const options: TranspileOptions = {
-      compilerOptions: {
-        allowSyntheticDefaultImports: true,
-        alwaysStrict: true,
-        esModuleInterop: true,
-        module: tsc.ModuleKind.CommonJS,
-        moduleResolution: tsc.ModuleResolutionKind.NodeJs,
-        // noEmit: true, // what is the outdir / outfile ???
-        target: tsc.ScriptTarget.ES5
-      }
-    };
+    // const options: TranspileOptions = {
+    //   compilerOptions: {
+    //     allowSyntheticDefaultImports: true,
+    //     alwaysStrict: true,
+    //     esModuleInterop: true,
+    //     module: tsc.ModuleKind.CommonJS,
+    //     moduleResolution: tsc.ModuleResolutionKind.NodeJs,
+    //     // noEmit: true, // what is the outdir / outfile ???
+    //     target: tsc.ScriptTarget.ES5
+    //   }
+    // };
 
     // ?????????
     // "webpack --config webpack.config.vendor.js
 
-    // process.argv
-    // process.execArgv
-
-    // * spawn a child process???
-
-    // process.exit([code])
-    // process.execPath
-
-    // ? process.nextTick(callback[, ...args])
-    // ? process.stdin
-    // ? process.stdout
-
-    // ! i have no idea about this
-    // Function(tsc.transpileModule(configString, options).outputText);
-
+    const config = require("../webpack.dev.config"); // !
     const compiler: Compiler = webpack(config);
     const hotMiddlewareScript: string = `webpack-hot-middleware/client?path=/__webpack_hmr&timeout=4000&reload=true`;
 

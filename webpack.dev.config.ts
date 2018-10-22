@@ -6,6 +6,11 @@ import { Configuration, HotModuleReplacementPlugin } from "webpack";
 // ? webpack-dev/hot-middleware needed that line in tsconfig before...
 // "allowJs": true,
 
+// ! `cwd` || `root` for @babel/preset-typescript || webpack.config (might save relative path headache...)
+
+// root directory relative to compiled `.js` webpack.config
+const rootDir = ["..", "..", ".."];
+
 // repeated settings for config
 const exclude = /node_modules/;
 const include = path.join(__dirname, "client", "src", `index.js`);
@@ -22,11 +27,16 @@ const plugins: HtmlWebpackPlugin[] = [
 ];
 
 const webpackDevConfig: Configuration = {
-  context: __dirname,
+  // context: __dirname,
   devtool: "cheap-module-eval-source-map",
   entry: {
     app: [include, "webpack-hot-middleware/client"],
-    vendor: ["react", "react-dom", "webpack-hot-middleware/client"]
+    vendor: [
+      "react",
+      "react-dom",
+      "@babel/polyfill",
+      "webpack-hot-middleware/client"
+    ]
   },
   externals: {
     // react, react-dom, react-router
@@ -55,7 +65,12 @@ const webpackDevConfig: Configuration = {
           ],
           presets: [
             ["@babel/preset-env", { targets: { browsers: "last 2 versions" } }],
-            "@babel/preset-typescript",
+            [
+              "@babel/preset-typescript",
+              {
+                configFileName: `${rootDir.join("/")}/tsconfig.json`
+              }
+            ],
             "@babel/preset-react"
           ]
         },
@@ -79,6 +94,14 @@ const webpackDevConfig: Configuration = {
   },
   plugins,
   resolve: {
+    alias: {
+      react: path.resolve(
+        path.join(__dirname, ...rootDir, "node_modules", "react")
+      ),
+      "react-hot-loader": path.resolve(
+        path.join(__dirname, ...rootDir, "node_modules", "react-hot-loader")
+      )
+    },
     extensions: [".js", ".jsx", ".ts", ".tsx", "*"]
   },
   target: "node",

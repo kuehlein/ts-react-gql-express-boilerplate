@@ -19,23 +19,17 @@
   },
   "scripts": {
     "postinstall": "touch secrets.js",
-    "------------": "",
-    "compile-prod": "tsc webpack.prod.config server/index server/server",
-    "compile-dev": "tsc webpack.dev.config server/index server/server",
-    "start-server": "DATABASE_URL=postgres://localhost/ts-react-gql-express-boilerplate node public/dist/ts-sourcemap/server/index.js",
+    "type-check": "npm run compile-prod --noEmit",
+    "compile-prod": "tsc -p config/tsconfig.prod.json",
+    "compile-dev": "tsc -p config/tsconfig.entry.json",
+    "start-server": "NODE_ENV=development DATABASE_URL=postgres://localhost/ts-react-gql-express-boilerplate node public/dist/ts-sourcemap/server/index.js",
     "dev": "npm run compile-dev && npm run start-server",
-    "~~~~~~~~~~~~": "",
+    "prod": "npm run compile-prod && NODE_ENV=production npx webpack --config=public/dist/ts-sourcemap/webpack.prod.config.js",
     "watch-server": "DATABASE_URL=postgres://localhost/ts-react-gql-express-boilerplate nodemon public/dist/ts-sourcemap/server/index.js",
-    "build-client-dev": "NODE_ENV=development",
-    "build-client-prod": "NODE_ENV=production",
-    "start-dev": "tsc && npm start-server",
-    "type-check": "tsc --noEmit",
-    "prod": "tsc && NODE_ENV=production npx webpack --config=public/dist/ts-sourcemap/webpack.prod.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "ISC",
   "devDependencies": {
-    "@babel/core": "^7.1.2",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/plugin-proposal-decorators": "^7.1.2",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
@@ -62,6 +56,8 @@
     "webpack-uglify-js-plugin": "^1.1.9"
   },
   "dependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/polyfill": "^7.0.0",
     "body-parser": "^1.18.3",
     "chalk": "^2.4.1",
     "compression": "^1.7.3",
