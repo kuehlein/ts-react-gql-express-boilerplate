@@ -21,7 +21,7 @@
     "postinstall": "touch secrets.js",
     "type-check": "npm run compile-prod --noEmit",
     "compile-prod": "tsc -p config/tsconfig.prod.json",
-    "compile-dev": "tsc -p config/tsconfig.entry.json",
+    "compile-dev": "tsc -p config/tsconfig.server.json",
     "start-server": "NODE_ENV=development DATABASE_URL=postgres://localhost/ts-react-gql-express-boilerplate node public/dist/ts-sourcemap/server/index.js",
     "dev": "npm run compile-dev && npm run start-server",
     "prod": "npm run compile-prod && NODE_ENV=production npx webpack --config=public/dist/ts-sourcemap/webpack.prod.config.js",

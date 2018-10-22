@@ -51,23 +51,23 @@ export default class Server {
      *  ? "include": ["webpack.config.*.ts", "./client", "./server", "*.ts"]
      */
 
-    // const { spawn } = require("child_process");
-    // const child = spawn("webpack", [
-    //   "--config=public/dist/ts-sourcemap/webpack.dev.config.js" //  might need to feed it the tsconfig + tslint
-    // ]);
+    const { spawn } = require("child_process");
+    const child = spawn("webpack", [
+      "--config=public/dist/ts-sourcemap/webpack.dev.config.js" // config/tsconfig.client.json
+    ]);
 
-    // // exit, disconnect, error, close, and message.
-    // // child.stdin, child.stdout, and child.stderr
+    // exit, disconnect, error, close, and message.
+    // child.stdin, child.stdout, and child.stderr
 
-    // child.stdout.on("data", data => {
-    //   console.log(`child stdout:\n${data}`);
-    // });
+    child.stdout.on("data", data => {
+      console.log(`child stdout:\n${data}`);
+    });
 
-    // child.on("exit", (code, signal) =>
-    //   console.log(
-    //     `child process exited with\ncode ${code} and signal ${signal}`
-    //   )
-    // );
+    child.on("exit", (code, signal) =>
+      console.log(
+        `child process exited with\ncode ${code} and signal ${signal}`
+      )
+    );
 
     // ! vvv
     // const exec = require("child_process").exec;
@@ -100,15 +100,15 @@ export default class Server {
     //   }
     // );
 
-    const syncAndListen: Promise<void> = this.syncDb()
-      .then(() => this.createApp())
-      .then(() => this.startListening());
+    // const syncAndListen: Promise<void> = this.syncDb()
+    //   .then(() => this.createApp())
+    //   .then(() => this.startListening());
 
-    const buildAndServe: Promise<void> = this.webpack().then(() =>
-      this.staticallyServeFiles()
-    );
+    // const buildAndServe: Promise<void> = this.webpack().then(() =>
+    //   this.staticallyServeFiles()
+    // );
 
-    Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
+    // Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
   }
 
   /**

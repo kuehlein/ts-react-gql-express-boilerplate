@@ -4,8 +4,7 @@
     "../node_modules",
     "**/*.spec.ts",
     "../webpack.dev.config.ts",
-    "../server/index.ts",
-    "../server/server.ts"
+    "../server/"
   ],
-  "include": ["../server/", "../client/"]
+  "include": ["../client/"]
 }
