@@ -1,9 +1,13 @@
 {
+  "compilerOptions": {
+    "allowJs": true
+  },
   "extends": "./tsconfig.main.json",
   "exclude": [
     "../node_modules",
     "**/*.spec.ts",
-    "../webpack.dev.config.ts",
+    "./webpack.dev.config.ts",
+    "./webpack.prod.config.ts",
     "../server/"
   ],
   "include": ["../client/"]

@@ -1,5 +1,10 @@
 {
   "extends": "./tsconfig.main.json",
-  "exclude": ["../node_modules", "**/*.spec.ts", "../client/"],
-  "files": ["../webpack.dev.config.ts", "../server/index.ts"]
+  "exclude": [
+    "../node_modules",
+    "**/*.spec.ts",
+    "../client/",
+    "./webpack.prod.config.ts"
+  ],
+  "files": ["./webpack.dev.config.ts", "../server/index.ts"]
 }

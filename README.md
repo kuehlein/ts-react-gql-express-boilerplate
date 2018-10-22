@@ -1,37 +1,33 @@
 boilerplate for typescript react gql express project
 
-should i use a prettier config?
+# DO NOT DO THIS:
 
-# TODO:
+## OPTIMIZATION ---
 
-    * user:
-           - model
-           - user store
-    * redux store
-    * graphql
-    * auth
-    * passport
+### Do not connect client to server (or vice versa) through imports:
 
-how to start dev.....
+-tsc will compile all files connected via import
+-using hmr, only client side is recompiled to save time
+-by connecting client and server via imports, tsc will recompile everything
 
--tsc ./webpack.config.ts
+### Do not watch server while using HMR
 
--webpack command
--compiles -----> start server -----> build +
--builds
-|
--start server
-~server _serves_ static bundle build by webpack
+-using a tool that restarts the server (like nodemon) will significantly impact the preformance of HMR
 
-**_CHANGES_**
+# --------------------------------------------------------------------------
 
--
+# --------------------------------------------------------------------------
 
-# 2 tsconfigs??
+# TO DO:
 
-    ~one for
+-should i use a prettier config?
+-live reload for dev?
+-enable front an back-end dev using live-reload (webpack) and nodemon (express)
+-advantages of hmr (state persistence) is lost, but changes will appear on front/back-end
 
----
+# --------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------
 
 #CONTROL FLOW
 _development and prododuction_
@@ -39,7 +35,7 @@ _development and prododuction_
 ---
 
 TRANSPILE:
--./webpack.config.ts
+-./config/webpack.dev.config.ts
 -./server/index.ts
 -./server/server/ts
 
@@ -64,31 +60,6 @@ CREATING APP +
 SERVES BUNDLE <------server statically serves bundle
 
 ---
-
-TRANSPILE:
--./webpack.config.ts
--./server/index.ts
--./server/server/ts
-
-RUN:
--./public/dist/ts-sourcemap/server/index.js
-|
-V
--./public/dist/ts-sourcemap/server/server.js
-|
-V
--./public/dist/ts-sourcemap/webpack.config.js
-|
-TSC + <----------excecuting webpack.config
-BUNDLE
-|
-V
-WAIT ON SERVER <------webpack finishes, server resumes
-|
-V
-SERVER FINISHES <-----server finishes executing
-CREATING APP +
-SERVES BUNDLE <------server statically serves bundle
 
 CHANGES MADE: (client)
 -react-hot-loader detects changes ???
@@ -100,7 +71,9 @@ CHANGES MADE: (server)
 -changes will not be detected
 -will have to restart
 
-# USE NODEMON INSTEAD --- no client side watching :(
+# --------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------
 
 /\*\*
 
@@ -174,38 +147,3 @@ CHANGES MADE: (server)
 
   });
   }
-
-
-                _.·´¯`·.__.·´¯`·.__
-                                     ¯¯--_
-                                          ¯-_
-      _____.·---···´¯¯¯¯¯¯¯¯¯¯¯`···---·._____
- /  /_.·-·._.·-·._.·´¯`·._.·´¯`·._.·-·._.·-·._\
-   /_|     |     |       |       |     |     |_\
-  /   `---- \   /|       |       |\   / ----´   \
-  |          `¯´  ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯  `¯´          |\
-(  \                                           /  )
- \  \                                         /  /
-  \  \    ___ _____ _____ _____ _____ ___    /  /
-   \  ¯¯¯`---'----.|_____|_____|.----'---´¯¯¯  /
-     -__                                   __-
-         ¯¯¯---_____________________---¯¯¯
-
-
-
-
-
-                 _.·´¯`·._.·´¯`·.__
-                                     ¯¯--_
-                                          ¯-_
-      _____.·---···´¯¯¯¯¯¯¯¯¯¯¯`···---·._____  \
-    /_.·-·._.·-·._.·´¯`·._.·´¯`·._.·-·._.·-·._\ \
-   / |     |     |       |       |     |     | \ \
-  /   `---- \   /|       |       |\   / ----´   \ \
- /           `¯´  ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯  `¯´           \ '
-(                                                 )'
- \                                               / '
-  \      ____ _____ _____ _____ _____ ____      / /
-   \   /     |     |     |     |     |     \   / /
-    \ ´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯` / /
-     `¯¯¯¯¯¯`···---.___________.---···´¯¯¯¯¯¯´ /

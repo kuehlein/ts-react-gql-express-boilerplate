@@ -1,15 +1,14 @@
 import path from "path";
 import { Configuration, optimize } from "webpack";
-const { ModuleConcatenationPlugin } = optimize;
 import UglifyJsPlugin from "webpack-uglify-js-plugin";
 
 // root directory relative to compiled `.js` webpack.config
-const rootDir = ["..", "..", ".."];
+const rootDir = ["..", "..", "..", ".."];
 
 // repeated settings for config
 const exclude = /node_modules/;
-const include = path.join(__dirname, "client", "src", `index.js`);
-const plugins = [new ModuleConcatenationPlugin()];
+const include = path.join(__dirname, "..", "client", "src", `index.js`);
+const plugins = [new optimize.ModuleConcatenationPlugin()];
 const minimizer = [
   new UglifyJsPlugin({
     parallel: { cache: false, workers: 2 },
@@ -39,7 +38,7 @@ const minimizer = [
 ];
 
 const webpackProdConfig: Configuration = {
-  context: __dirname,
+  context: path.resolve(__dirname, ...rootDir),
   devtool: "cheap-module-source-map",
   entry: {
     app: [include, "webpack-hot-middleware/client"],
@@ -73,7 +72,12 @@ const webpackProdConfig: Configuration = {
             [
               "@babel/preset-typescript",
               {
-                configFileName: `${rootDir.join("/")}/tsconfig.json`
+                configFileName: path.resolve(
+                  __dirname,
+                  ...rootDir,
+                  "config",
+                  "tsconfig.client.json"
+                )
               }
             ],
             "@babel/preset-react"

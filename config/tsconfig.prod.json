@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.main.json",
-  "exclude": ["../node_modules", "**/*.spec.ts"],
-  "include": ["../webpack.dev.config.ts", "../client/", "../server/"]
+  "exclude": ["../node_modules", "**/*.spec.ts", "./webpack.dev.config.ts"],
+  "include": ["./webpack.prod.config.ts", "../client/", "../server/"]
 }

@@ -43,24 +43,6 @@ export default class Server {
     //   }
     // };
 
-    const { spawn } = require("child_process");
-    const child = spawn("webpack", [
-      "--config=public/dist/ts-sourcemap/webpack.dev.config.js" // config/tsconfig.client.json
-    ]);
-
-    // exit, disconnect, error, close, and message.
-    // child.stdin, child.stdout, and child.stderr
-
-    child.stdout.on("data", data => {
-      console.log(`child stdout:\n${data}`);
-    });
-
-    child.on("exit", (code, signal) =>
-      console.log(
-        `child process exited with\ncode ${code} and signal ${signal}`
-      )
-    );
-
     // ! vvv
     // const exec = require("child_process").exec;
     // exec("webpack.dev.config.js", (err, stdout, stderr) => {
@@ -172,46 +154,19 @@ export default class Server {
    */
   private startListening(): void {
     this.appInstance.listen(this.PORT, () => {
-      const indent: string = "       ";
+      const indent: string = "         ";
       const design: string =
         "`·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·´";
       const uri: string = `http://localhost:${this.PORT}`;
 
-      // console.log(chalk.magentaBright.bold(`\n${design}\n`));
-      // console.log(
-      //   chalk.cyanBright(`${indent}Listening on:\n`),
-      //   chalk.reset.green.bold(`${indent + indent}-${uri}\n`),
-      //   chalk.reset.cyanBright(`${indent + indent + indent} AND\n`),
-      //   chalk.reset.green.bold(`${indent + indent}-${uri}\n`) // ! ${gqlServer.graphqlPath}\n`
-      // );
-      // console.log(chalk.reset.magentaBright.bold(`${design}\n`));
-
+      console.log(chalk.magentaBright.bold(`\n${design}\n`));
       console.log(
-        chalk.magentaBright.bold(
-          "`·._.·-·._.·-·._.·´¯`·._.·´¯`·._.·-·._.·-·._.·´"
-        )
+        chalk.cyanBright(`${indent}Listening on:\n`),
+        chalk.reset.green.bold(`${indent + indent}-${uri}\n`),
+        chalk.reset.cyanBright(`${indent + indent + indent} AND\n`),
+        chalk.reset.green.bold(`${indent + indent}-${uri}\n`) // ! ${gqlServer.graphqlPath}\n`
       );
-      console.log(
-        chalk.whiteBright.bold("   |     |     |       |       |     |     |")
-      );
-      console.log(
-        chalk.whiteBright.bold("    ¯¯¯¯¯ ¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯¯¯ ¯¯¯¯¯")
-      );
-      console.log(chalk.cyanBright.bold(`${indent}     Server running on:`));
-      console.log(chalk.greenBright.bold(`${indent + indent + uri}`));
-      console.log(chalk.cyanBright.bold(`${indent + indent + indent} AND`));
-      console.log(chalk.greenBright.bold(`${indent + "   " + uri}/graphql`));
-      console.log(
-        chalk.whiteBright.bold("      _____ _____ _____ _____ _____ _____")
-      );
-      console.log(
-        chalk.whiteBright.bold("     |     |     |     |     |     |     |")
-      );
-      console.log(
-        chalk.magentaBright.bold(
-          "`·.·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·.·´"
-        )
-      );
+      console.log(chalk.reset.magentaBright.bold(`${design}\n`));
     });
   }
 
@@ -220,12 +175,33 @@ export default class Server {
    *   *NOTE* --- Do not use nodemon or anything that restarts server... // ! details ???
    */
   private async webpack(/* config /* : Configuration */): Promise<void> {
-    // ?????????
-    // "webpack --config webpack.config.vendor.js
+    // ? "webpack --config webpack.config.vendor.js
 
-    const config = require("../webpack.dev.config"); // !
+    const { spawn } = require("child_process"); // fork || exec
+    const child = spawn("webpack", [
+      "--config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
+      "--extensions .ts" // config/tsconfig.client.json
+    ]);
+
+    // exit, disconnect, error, close, and message.
+    // child.stdin, child.stdout, and child.stderr
+
+    // child.stdout.on("data", data => {
+    //   console.log(`child stdout:\n${data}`);
+    // });
+
+    // child.on("exit", (code, signal) =>
+    //   console.log(
+    //     `child process exited with\ncode ${code} and signal ${signal}`
+    //   )
+    // );
+
+    const config = require("../config/webpack.dev.config"); // !
     const compiler: Compiler = webpack(config.default); // !
-    const hotMiddlewareScript: string = `webpack-hot-middleware/client?path=/__webpack_hmr&timeout=4000&reload=true`;
+    // const hotMiddlewareScript: string =
+    //   "webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true";
+
+    console.log("-----???----------------->", config.default.module.rules);
 
     this.appInstance.use(
       webpackMiddleware(compiler, {
@@ -248,7 +224,7 @@ export default class Server {
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
-      res.end(hotMiddlewareScript);
+      res.end(); // hotMiddlewareScript);
     });
   }
 
