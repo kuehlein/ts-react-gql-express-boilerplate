@@ -16,7 +16,7 @@ const exclude = /node_modules/;
 const include = path.join(__dirname, "client", "src", `index.js`);
 const plugins: HtmlWebpackPlugin[] = [
   new HtmlWebpackPlugin({
-    template: path.resolve(__dirname, "public", "index.html")
+    template: path.resolve(__dirname, "..", "..", "index.html") // ? "public", "index.html"
   }),
   new HotModuleReplacementPlugin(),
   new CleanWebpackPlugin([path.resolve(__dirname, "public", "dist/*.*")], {
@@ -54,6 +54,7 @@ const webpackDevConfig: Configuration = {
       {
         exclude,
         include,
+        loader: "babel-loader",
         options: {
           babelrc: false,
           cacheDirectory: true,
@@ -74,8 +75,7 @@ const webpackDevConfig: Configuration = {
             "@babel/preset-react"
           ]
         },
-        test: /\.(j|t)sx?$/,
-        use: "babel-loader"
+        test: /\.(j|t)sx?$/
       },
       {
         exclude,

@@ -43,14 +43,6 @@ export default class Server {
     //   }
     // };
 
-    /**
-     * * have a main `tsconfig`
-     *    * extend it with the folders/files i want to compile
-     *    * call `tsc` with the desired extended config
-     *
-     *  ? "include": ["webpack.config.*.ts", "./client", "./server", "*.ts"]
-     */
-
     const { spawn } = require("child_process");
     const child = spawn("webpack", [
       "--config=public/dist/ts-sourcemap/webpack.dev.config.js" // config/tsconfig.client.json
@@ -91,35 +83,21 @@ export default class Server {
     //   console.log(`child process exited with code ${code}`);
     // });
 
-    // fs.readFile(
-    //   path.resolve(__dirname, "..", "webpack.dev.config.js"),
-    //   "utf8",
-    //   (err, data) => {
-    //     if (err) throw err;
-    //     eval(data); // tsc.transpileModule(data, options).outputText); // logging output???
-    //   }
-    // );
+    const syncAndListen: Promise<void> = this.syncDb()
+      .then(() => this.createApp())
+      .then(() => this.startListening());
 
-    // const syncAndListen: Promise<void> = this.syncDb()
-    //   .then(() => this.createApp())
-    //   .then(() => this.startListening());
+    const buildAndServe: Promise<void> = this.webpack().then(() =>
+      this.staticallyServeFiles()
+    );
 
-    // const buildAndServe: Promise<void> = this.webpack().then(() =>
-    //   this.staticallyServeFiles()
-    // );
-
-    // Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
+    Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
   }
 
   /**
    * createAppProd
    */
   public createAppProd(): void {
-    // in production:
-    // just tsc
-    // then build using "NODE_ENV=production npx webpack --config=public/dist/ts-sourcemap/webpack.prod.config.js"
-    // and ship that bundle
-
     this.syncDb()
       .then(() => this.createApp())
       .then(() => this.staticallyServeFiles())
@@ -242,30 +220,16 @@ export default class Server {
    *   *NOTE* --- Do not use nodemon or anything that restarts server... // ! details ???
    */
   private async webpack(/* config /* : Configuration */): Promise<void> {
-    // ! create config file for whole project and one for just the first three
-    // * dont overlap compiling
-    // const options: TranspileOptions = {
-    //   compilerOptions: {
-    //     allowSyntheticDefaultImports: true,
-    //     alwaysStrict: true,
-    //     esModuleInterop: true,
-    //     module: tsc.ModuleKind.CommonJS,
-    //     moduleResolution: tsc.ModuleResolutionKind.NodeJs,
-    //     // noEmit: true, // what is the outdir / outfile ???
-    //     target: tsc.ScriptTarget.ES5
-    //   }
-    // };
-
     // ?????????
     // "webpack --config webpack.config.vendor.js
 
     const config = require("../webpack.dev.config"); // !
-    const compiler: Compiler = webpack(config);
+    const compiler: Compiler = webpack(config.default); // !
     const hotMiddlewareScript: string = `webpack-hot-middleware/client?path=/__webpack_hmr&timeout=4000&reload=true`;
 
     this.appInstance.use(
       webpackMiddleware(compiler, {
-        publicPath: config.output.publicPath,
+        publicPath: config.default.output.publicPath,
         serverSideRender: true,
         stats: {
           colors: true
