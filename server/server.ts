@@ -155,6 +155,7 @@ export default class Server {
     const child = spawn(
       "webpack --config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
       {
+        detatched: true,
         shell: true,
         stdio: "inherit"
       }
