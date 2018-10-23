@@ -1,12 +1,13 @@
 import bodyParser from "body-parser";
 import chalk from "chalk";
+import { spawn } from "child_process";
 import compression from "compression";
-import express from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 // import session from "express-session";
 import morgan from "morgan";
 // import passport from "passport";
 import path from "path";
-import webpack, { Compiler, Configuration } from "webpack";
+import webpack, { Compiler } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
@@ -19,8 +20,12 @@ import { prettyLogger } from "./utils";
 // const SequelizeStore = require("connect-session-sequelize")(session.Store);
 // const sessionStore = new SequelizeStore({ db });
 
+/**
+ * Contains the logic for running the server in both development and production.
+ * Instantiated in `server/index`.
+ */
 export default class Server {
-  public appInstance: express.Application;
+  public appInstance: Application;
 
   private PORT: number = Number(process.env.PORT) || 3000;
 
@@ -29,22 +34,12 @@ export default class Server {
   }
 
   /**
-   * createAppDev
-   *   *NOTE* --- `this.webpack` must come before `this.staticallyServeFiles`
+   * Creates an app for development, applies `webpack-dev-middleware`
+   * and `webpack-hot-middleware` to enable Hot Module Replacement.
+   * *NOTE* --- Respect the order:
+   * `this.webpack` -> `this.webpackDevMiddleware` -> `this.staticallyServeFiles`
    */
   public createAppDev(): void {
-    // transpile options for rest of files (other than webpack.config + server/index + server/server)
-    // const options: TranspileOptions = {
-    //   compilerOptions: {
-    //     allowSyntheticDefaultImports: true,
-    //     alwaysStrict: true,
-    //     esModuleInterop: true,
-    //     module: tsc.ModuleKind.CommonJS,
-    //     moduleResolution: tsc.ModuleResolutionKind.NodeJs,
-    //     target: tsc.ScriptTarget.ES5
-    //   }
-    // };
-
     const syncAndListen: Promise<void> = this.syncDb()
       .then(() => this.createApp())
       .then(() => this.startListening());
@@ -57,7 +52,7 @@ export default class Server {
   }
 
   /**
-   * createAppProd
+   * Creates an optimized production application build.
    */
   public createAppProd(): void {
     this.syncDb()
@@ -67,14 +62,17 @@ export default class Server {
   }
 
   /**
-   * syncDb
+   * Syncs the database to begin the creation of the server.
    */
   private async syncDb(): Promise<void> {
     await db.sync();
   }
 
   /**
-   * createApp
+   * Creates the body of the server. Logging middleware (`morgan`),
+   * body parsing middleware (`bodyParser`), compression middleware
+   * (`comporession`), as well as session, passport, auth and
+   * the graphql api are applied here.
    */
   private createApp(): void {
     // logging middleware
@@ -93,7 +91,7 @@ export default class Server {
   }
 
   /**
-   * sessionAndPassport
+   * Creates an express session and initialized passport with the session.
    */
   private sessionAndPassport(): void {
     // TODO: ----------------------------------------------------
@@ -114,14 +112,14 @@ export default class Server {
   }
 
   /**
-   * auth
+   * Route to user authentication.
    */
   private auth(): void {
     // TODO: app.use('/auth', require('./auth'));
   }
 
   /**
-   * graphql
+   * Route to graphql api.
    */
   private graphql(): void {
     // TODO: gqlServer.applyMiddleware({ app: this.appInstance });
@@ -131,7 +129,8 @@ export default class Server {
   }
 
   /**
-   * startListening
+   * Starts listening to the server on `process.env.PORT` or `3000`.
+   * *DEVELOPMENT ONLY*
    */
   private startListening(): void {
     this.appInstance.listen(this.PORT, () => {
@@ -148,14 +147,15 @@ export default class Server {
   }
 
   /**
-   * webpack
+   * Spawns a webpack child process using the development configuration.
+   * *DEVELOPMENT ONLY*
    */
   private async webpack(): Promise<void> {
-    const { spawn } = require("child_process"); // fork?
     const child = spawn(
       "webpack --config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
+      [],
       {
-        detatched: true,
+        detached: true,
         shell: true,
         stdio: "inherit"
       }
@@ -168,15 +168,27 @@ export default class Server {
         "warn",
         "Child process (webpack)",
         "    exited with:\n",
-        `    - CODE: ${chalk.cyanBright(code)}`,
+        `    - CODE: ${chalk.cyanBright(String(code))}`,
         `    - SIGNAL: ${chalk.cyanBright(signal)}`
       );
     });
   }
 
   /**
-   * webpackDevMiddleware
-   *   *NOTE* --- Do not use nodemon or anything that restarts server...
+   * Middleware to disable node.js caching
+   */
+  private noCache(req: Request, res: Response, next: NextFunction) {
+    res.header("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    res.header("Expires", "-1");
+    res.header("Pragma", "no-cache");
+    next();
+  }
+
+  /**
+   * Applies `webpack-dev-middleware` and `webpack-hot-middleware`
+   * to enable Hot Module Replacement in development.
+   * *NOTE* --- Do not use nodemon or anything that restarts server...
+   * *DEVELOPMENT ONLY*
    */
   private webpackDevMiddleware(): void {
     const compiler: Compiler = webpack(config);
@@ -198,7 +210,7 @@ export default class Server {
     );
     this.appInstance.use("/", (req, res, next) => {
       res.writeHead(200, {
-        "Cache-Control": "no-cache", // ! ???
+        // "Cache-Control": "no-cache", // ! ???
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
@@ -207,8 +219,9 @@ export default class Server {
   }
 
   /**
-   * staticallyServeFiles
-   *   *NOTE* --- The relative paths refer to the locations of the files after being compiled
+   * Serves the static bundle generated by webpack,
+   * as well as the other static assets like css and html files.
+   * *NOTE* --- The relative paths refer to the locations of the files after being transpiled
    */
   private staticallyServeFiles(): void {
     // staticly serve styles
@@ -233,7 +246,8 @@ export default class Server {
   }
 
   /**
-   * errorHandlingEndware
+   * Handles any errors that have been passed down
+   * without being handled earlier on.
    */
   private errorHandlingEndware(): void {
     this.appInstance.use((err, req, res, next) => {
