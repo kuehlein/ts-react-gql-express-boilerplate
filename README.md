@@ -21,9 +21,6 @@ boilerplate for typescript react gql express project
 # TO DO:
 
 -should i use a prettier config?
--live reload for dev?
--enable front an back-end dev using live-reload (webpack) and nodemon (express)
--advantages of hmr (state persistence) is lost, but changes will appear on front/back-end
 
 # --------------------------------------------------------------------------
 
@@ -74,76 +71,3 @@ CHANGES MADE: (server)
 # --------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------
-
-/\*\*
-
-- startListening
-- _NOTE_ --- This is fancier than it needs to be.
-  \*/
-  private startListening(): void {
-  this.appInstance.listen(this.PORT, () => {
-  const indent: string = " ";
-  const design: string =
-  "`·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·´"; const uri: string =`http://localhost:${this.PORT}`;
-
-      console.log(chalk.magentaBright.bold(`\n${design}\n`));
-      console.log(
-        chalk.cyanBright(`${indent}Listening on:\n`),
-        chalk.reset.green.bold(`${indent + indent}-${uri}\n`),
-        chalk.reset.cyanBright(`${indent + indent + indent} AND\n`),
-        chalk.reset.green.bold(`${indent + indent}-${uri}\n`) // ! ${gqlServer.graphqlPath}\n`
-      );
-      console.log(chalk.reset.magentaBright.bold(`${design}\n`));
-
-  });
-  }
-
-/\*\*
-
-- startListening
-- _NOTE_ --- This is fancier than it needs to be.
-  \*/
-  private startListening(): void {
-  this.appInstance.listen(this.PORT, () => {
-  const indent: string = " ";
-  const design: string =
-  "`·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·´"; const uri: string =`http://localhost:${this.PORT}`;
-
-      // console.log(chalk.magentaBright.bold(`\n${design}\n`));
-      // console.log(
-      //   chalk.cyanBright(`${indent}Listening on:\n`),
-      //   chalk.reset.green.bold(`${indent + indent}-${uri}\n`),
-      //   chalk.reset.cyanBright(`${indent + indent + indent} AND\n`),
-      //   chalk.reset.green.bold(`${indent + indent}-${uri}\n`) // ! ${gqlServer.graphqlPath}\n`
-      // );
-      // console.log(chalk.reset.magentaBright.bold(`${design}\n`));
-
-      console.log(
-        chalk.magentaBright.bold(
-          "`·._.·-·._.·-·._.·´¯`·._.·´¯`·._.·-·._.·-·._.·´"
-        )
-      );
-      console.log(
-        chalk.whiteBright.bold("   |     |     |       |       |     |     |")
-      );
-      console.log(
-        chalk.whiteBright.bold("    ¯¯¯¯¯ ¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯¯¯ ¯¯¯¯¯")
-      );
-      console.log(chalk.cyanBright.bold(`${indent}     Server running on:`));
-      console.log(chalk.greenBright.bold(`${indent + indent + uri}`));
-      console.log(chalk.cyanBright.bold(`${indent + indent + indent} AND`));
-      console.log(chalk.greenBright.bold(`${indent + "   " + uri}/graphql`));
-      console.log(
-        chalk.whiteBright.bold("      _____ _____ _____ _____ _____ _____")
-      );
-      console.log(
-        chalk.whiteBright.bold("     |     |     |     |     |     |     |")
-      );
-      console.log(
-        chalk.magentaBright.bold(
-          "`·.·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·.·´"
-        )
-      );
-
-  });
-  }

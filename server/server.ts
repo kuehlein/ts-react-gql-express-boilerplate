@@ -10,7 +10,9 @@ import webpack, { Compiler, Configuration } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
+import config from "../config/webpack.dev.config";
 import db from "./db";
+import { prettyLogger } from "./utils";
 // import gqlServer from "./graphql";
 
 // tslint:disable-next-line
@@ -43,35 +45,13 @@ export default class Server {
     //   }
     // };
 
-    // ! vvv
-    // const exec = require("child_process").exec;
-    // exec("webpack.dev.config.js", (err, stdout, stderr) => {
-    //   //   stdout is the stuff i need?
-    //   console.log("------------", stdout);
-    // });
-    // orrrr
-    // const { spawn } = require("child_process");
-    // const ls = spawn("ls", ["-lh", "/usr"]);
-
-    // ls.stdout.on("data", data => {
-    //   console.log(`stdout: ${data}`);
-    // });
-
-    // ls.stderr.on("data", data => {
-    //   console.log(`stderr: ${data}`);
-    // });
-
-    // ls.on("close", code => {
-    //   console.log(`child process exited with code ${code}`);
-    // });
-
     const syncAndListen: Promise<void> = this.syncDb()
       .then(() => this.createApp())
       .then(() => this.startListening());
 
-    const buildAndServe: Promise<void> = this.webpack().then(() =>
-      this.staticallyServeFiles()
-    );
+    const buildAndServe: Promise<void> = this.webpack()
+      .then(() => this.webpackDevMiddleware())
+      .then(() => this.staticallyServeFiles());
 
     Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
   }
@@ -116,6 +96,7 @@ export default class Server {
    * sessionAndPassport
    */
   private sessionAndPassport(): void {
+    // TODO: ----------------------------------------------------
     // session middleware with passport
     // this.appInstance.use(
     //   session({
@@ -129,6 +110,7 @@ export default class Server {
     // );
     // this.appInstance.use(passport.initialize());
     // this.appInstance.use(passport.session());
+    // TODO: ----------------------------------------------------
   }
 
   /**
@@ -142,7 +124,7 @@ export default class Server {
    * graphql
    */
   private graphql(): void {
-    // gqlServer.applyMiddleware({ app: this.appInstance });
+    // TODO: gqlServer.applyMiddleware({ app: this.appInstance });
 
     // handle requests that miss end points above
     this.errorHandlingEndware();
@@ -150,62 +132,57 @@ export default class Server {
 
   /**
    * startListening
-   *   *NOTE* --- This is fancier than it needs to be.
    */
   private startListening(): void {
     this.appInstance.listen(this.PORT, () => {
-      const indent: string = "         ";
-      const design: string =
-        "`·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·´";
       const uri: string = `http://localhost:${this.PORT}`;
 
-      console.log(chalk.magentaBright.bold(`\n${design}\n`));
-      console.log(
-        chalk.cyanBright(`${indent}Listening on:\n`),
-        chalk.reset.green.bold(`${indent + indent}-${uri}\n`),
-        chalk.reset.cyanBright(`${indent + indent + indent} AND\n`),
-        chalk.reset.green.bold(`${indent + indent}-${uri}\n`) // ! ${gqlServer.graphqlPath}\n`
+      prettyLogger(
+        "log",
+        "Listening on:\n",
+        `  - ${chalk.greenBright(uri)}`,
+        "             AND",
+        `  - ${chalk.greenBright(uri)}` // ! ${gqlServer.graphqlPath}\n`
       );
-      console.log(chalk.reset.magentaBright.bold(`${design}\n`));
     });
   }
 
   /**
    * webpack
-   *   *NOTE* --- Do not use nodemon or anything that restarts server... // ! details ???
    */
-  private async webpack(/* config /* : Configuration */): Promise<void> {
-    // ? "webpack --config webpack.config.vendor.js
+  private async webpack(): Promise<void> {
+    const { spawn } = require("child_process"); // fork?
+    const child = spawn(
+      "webpack --config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
+      {
+        shell: true,
+        stdio: "inherit"
+      }
+    );
 
-    const { spawn } = require("child_process"); // fork || exec
-    const child = spawn("webpack", [
-      "--config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
-      "--extensions .ts" // config/tsconfig.client.json
-    ]);
+    child.on("exit", (code, signal) => {
+      child.kill();
 
-    // exit, disconnect, error, close, and message.
-    // child.stdin, child.stdout, and child.stderr
+      prettyLogger(
+        "warn",
+        "Child process (webpack)",
+        "    exited with:\n",
+        `    - CODE: ${chalk.cyanBright(code)}`,
+        `    - SIGNAL: ${chalk.cyanBright(signal)}`
+      );
+    });
+  }
 
-    // child.stdout.on("data", data => {
-    //   console.log(`child stdout:\n${data}`);
-    // });
-
-    // child.on("exit", (code, signal) =>
-    //   console.log(
-    //     `child process exited with\ncode ${code} and signal ${signal}`
-    //   )
-    // );
-
-    const config = require("../config/webpack.dev.config"); // !
-    const compiler: Compiler = webpack(config.default); // !
-    // const hotMiddlewareScript: string =
-    //   "webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true";
-
-    console.log("-----???----------------->", config.default.module.rules);
+  /**
+   * webpackDevMiddleware
+   *   *NOTE* --- Do not use nodemon or anything that restarts server...
+   */
+  private webpackDevMiddleware(): void {
+    const compiler: Compiler = webpack(config);
 
     this.appInstance.use(
       webpackMiddleware(compiler, {
-        publicPath: config.default.output.publicPath,
+        publicPath: config.output.publicPath,
         serverSideRender: true,
         stats: {
           colors: true
@@ -220,11 +197,11 @@ export default class Server {
     );
     this.appInstance.use("/", (req, res, next) => {
       res.writeHead(200, {
-        "Cache-Control": "no-cache",
+        "Cache-Control": "no-cache", // ! ???
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
-      res.end(); // hotMiddlewareScript);
+      res.end();
     });
   }
 
@@ -267,25 +244,3 @@ export default class Server {
     });
   }
 }
-
-/*
-
-`
-                _.·´¯`·.__.·´¯`·.__
-                                     ¯¯--_
-                                          ¯-_
-      _____.·---···´¯¯¯¯¯¯¯¯¯¯¯`···---·._____
- /  /_.·-·._.·-·._.·´¯`·._.·´¯`·._.·-·._.·-·._\
-   /_|     |     |       |       |     |     |_\
-  /   `---- \   /|       |       |\   / ----´   \
-  |          `¯´  ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯  `¯´          |\
-(  \                                           /  )
- \  \                                         /  /
-  \  \    ___ _____ _____ _____ _____ ___    /  /
-   \  ¯¯¯`---'----.|_____|_____|.----'---´¯¯¯  /
-     -__                                   __-
-         ¯¯¯---_____________________---¯¯¯
-`
-
-
-*/
