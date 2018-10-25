@@ -4,21 +4,24 @@ import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
 import { Configuration, HotModuleReplacementPlugin } from "webpack";
 
-// ! try to run ts files without emitting them
-
-// root directory relative to compiled `.js` webpack.config
 const rootDir = ["..", "..", "..", ".."];
 const distDir = ["..", ".."];
 
 // repeated settings for config
 const exclude = /node_modules/;
-// const include = path.resolve(__dirname, "..", "client", "index.js");
+const include =
+  path.extname(module.id) === ".ts"
+    ? path.resolve(__dirname, "client", "index.tsc")
+    : path.resolve(__dirname, ...rootDir, "client", "index.tsx");
 const tsconfig = path.resolve(
   __dirname,
   ...rootDir,
   "config",
   "tsconfig.client.json"
 );
+
+// // prints more readable module names in the browser console on HMR updates
+// new webpack.NamedModulesPlugin(),
 
 // development plugins
 const plugins = [
@@ -38,11 +41,6 @@ const plugins = [
   })
 ];
 
-const entry =
-  path.extname(module.id) === ".ts"
-    ? path.resolve(__dirname, "client", "index.tsc")
-    : path.resolve(__dirname, ...rootDir, "client", "index.tsx");
-
 // script for webpack-hot-middleware
 const hotMiddlewareScript: string =
   "webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true";
@@ -51,12 +49,11 @@ const webpackDevConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
   devtool: "source-map", // "cheap-module-eval-source-map",
   entry: {
-    app: entry, // [hotMiddlewareScript], // ? somehow include entry...
+    app: ["react-hot-loader/patch", include, hotMiddlewareScript],
     vendor: [
       "react",
-      "react-dom",
-      // "react-router" ???
-      hotMiddlewareScript
+      "react-dom"
+      // "react-router"
     ]
   },
   // externals: {
@@ -67,18 +64,16 @@ const webpackDevConfig: Configuration = {
     rules: [
       {
         exclude,
-        // include,
+        include,
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
       },
       {
         exclude,
-        include: entry,
+        include,
         loader: "ts-loader",
         options: {
           configFile: tsconfig,
-          // happyPackMode: true,
-          // onlyCompileBundledFiles: true, // possibly redundant
           transpileOnly: true
         },
         test: /\.tsx?$/
@@ -86,7 +81,7 @@ const webpackDevConfig: Configuration = {
       {
         enforce: "pre",
         exclude,
-        // include,
+        include,
         loader: "source-map-loader",
         test: /\.js$/
       }
@@ -97,7 +92,8 @@ const webpackDevConfig: Configuration = {
   },
   output: {
     filename: "[name].bundle.js",
-    path: path.join(__dirname, ...distDir)
+    path: path.join(__dirname, ...distDir),
+    publicPath: path.join(__dirname, ...distDir, "static/")
   },
   plugins,
   resolve: {
@@ -112,9 +108,9 @@ const webpackDevConfig: Configuration = {
       //   path.join(__dirname, ...rootDir, "node_modules", "react-router-dom")
       // )
     },
-    extensions: [".js", ".jsx", ".ts", ".tsx", "*"]
+    extensions: [".js", ".ts", ".tsx", "*"]
   },
-  target: "web" // node
+  target: "web"
 };
 
 export default webpackDevConfig;

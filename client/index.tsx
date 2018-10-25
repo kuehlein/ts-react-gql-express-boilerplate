@@ -11,17 +11,9 @@ import ReactDOM from "react-dom";
 
 import { App } from "./components";
 
-console.log("--------in the index...---------");
-console.log("--------in the index...---------");
-console.log("--------in the index...---------");
-
 declare let module: any;
 
 ReactDOM.render(<App />, document.getElementById("app"));
-
-console.log("---------hello-------------");
-console.log("---------hello-------------");
-console.log("---------hello-------------");
 
 // Hot Module Replacement (HMR)
 if (module.hot) {

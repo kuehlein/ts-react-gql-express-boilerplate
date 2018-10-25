@@ -13,6 +13,7 @@
     "outDir": "../public/dist/ts-sourcemap/",
     "preserveConstEnums": true,
     "pretty": true,
+    "jsx": "react",
     "removeComments": true,
     "sourceMap": true
   }
