@@ -1,5 +1,7 @@
 import React from "react";
-import { Provider } from "react-redux";
+// import { Provider } from "react-redux";
+
+import "!app!css!./app.css"; // ts-loader stuff
 
 // import Routes from './routes'
 // import store from "../store";

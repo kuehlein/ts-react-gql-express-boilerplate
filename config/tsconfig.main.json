@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,
     "baseUrl": "../",
@@ -7,7 +8,6 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "jsx": "react",
-    "lib": ["dom", "es2015", "esnext.asynciterable"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": false,
@@ -15,7 +15,6 @@
     "preserveConstEnums": true,
     "pretty": true,
     "removeComments": true,
-    "sourceMap": true,
-    "target": "es6"
+    "sourceMap": true
   }
 }

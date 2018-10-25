@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "allowJs": true
+    "lib": ["dom", "es2015", "esnext.asynciterable"],
+    "target": "es6"
   },
   "extends": "./tsconfig.main.json",
   "exclude": [
@@ -10,5 +11,5 @@
     "./webpack.prod.config.ts",
     "../server/"
   ],
-  "include": ["../client/"]
+  "include": ["../client/index.tsx"]
 }

@@ -8,7 +8,7 @@ const distDir = ["..", ".."];
 
 // repeated settings for config
 const exclude = /node_modules/;
-const include = path.join(__dirname, "..", "client", "src", `index.js`);
+const include = path.join(__dirname, "..", "client", "index.js");
 const plugins = [new optimize.ModuleConcatenationPlugin()];
 const minimizer = [
   new UglifyJsPlugin({
@@ -41,16 +41,7 @@ const minimizer = [
 const webpackProdConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
   devtool: "cheap-module-source-map",
-  entry: include, // {
-  // ! this junk is not used in prod ?
-  //   app: [include, "webpack-hot-middleware/client"],
-  //   vendor: [
-  //     "react",
-  //     "react-dom",
-  //     "@babel/polyfill",
-  //     "webpack-hot-middleware/client"
-  //   ]
-  // },
+  entry: include,
   // externals: {
   //   // react, react-dom, react-router
   // },
@@ -98,7 +89,6 @@ const webpackProdConfig: Configuration = {
   },
   optimization: {
     minimizer
-    // nodeEnv: "production" // ! not running in node environment... ?
   },
   output: {
     filename: "[name].bundle.js",

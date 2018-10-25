@@ -15,11 +15,11 @@ declare let module: any;
 
 ReactDOM.render(<App />, document.getElementById("app"));
 
-// Hot Module Replacement
+// Hot Module Replacement (HMR)
 if (module.hot) {
   module.hot.accept("./components/App", () => {
+    // for HMR to work, `App` must be re-required
     const NextApp = require("./components/App").default;
-
     ReactDOM.render(<NextApp />, document.getElementById("app"));
   });
 }

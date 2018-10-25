@@ -27,14 +27,13 @@ boilerplate for typescript react gql express project
 # --------------------------------------------------------------------------
 
 #CONTROL FLOW
-_development and prododuction_
+_development_
 
 ---
 
 TRANSPILE:
 -./config/webpack.dev.config.ts
--./server/index.ts
--./server/server/ts
+-./server/
 
 RUN:
 -./public/dist/ts-sourcemap/server/index.js

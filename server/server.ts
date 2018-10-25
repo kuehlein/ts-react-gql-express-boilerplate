@@ -2,7 +2,7 @@ import bodyParser from "body-parser";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import compression from "compression";
-import express, { Application, NextFunction, Request, Response } from "express";
+import express, { Application } from "express";
 // import session from "express-session";
 import morgan from "morgan";
 // import passport from "passport";
@@ -36,12 +36,10 @@ export default class Server {
   /**
    * Creates an app for development, applies `webpack-dev-middleware`
    * and `webpack-hot-middleware` to enable Hot Module Replacement.
-   * *NOTE* --- Respect the order:
-   * `this.webpack` -> `this.webpackDevMiddleware` -> `this.staticallyServeFiles`
    */
   public createAppDev(): void {
     const syncAndListen: Promise<void> = this.syncDb()
-      .then(() => this.createApp())
+      .then(() => this.createAppMain())
       .then(() => this.startListening());
 
     const buildAndServe: Promise<void> = this.webpack()
@@ -56,7 +54,7 @@ export default class Server {
    */
   public createAppProd(): void {
     this.syncDb()
-      .then(() => this.createApp())
+      .then(() => this.createAppMain())
       .then(() => this.staticallyServeFiles())
       .catch(err => console.log(err));
   }
@@ -71,10 +69,10 @@ export default class Server {
   /**
    * Creates the body of the server. Logging middleware (`morgan`),
    * body parsing middleware (`bodyParser`), compression middleware
-   * (`comporession`), as well as session, passport, auth and
+   * (`compression`), as well as session, passport, auth and
    * the graphql api are applied here.
    */
-  private createApp(): void {
+  private createAppMain(): void {
     // logging middleware
     this.appInstance.use(morgan("dev"));
 
@@ -129,6 +127,20 @@ export default class Server {
   }
 
   /**
+   * Handles any errors that have been passed down
+   * without being handled earlier on.
+   */
+  private errorHandlingEndware(): void {
+    this.appInstance.use((err, req, res, next) => {
+      console.error(err);
+      console.error(err.stack);
+      res
+        .status(err.status || 500)
+        .send(err.message || "Internal server error.");
+    });
+  }
+
+  /**
    * Starts listening to the server on `process.env.PORT` or `3000`.
    * *DEVELOPMENT ONLY*
    */
@@ -147,12 +159,12 @@ export default class Server {
   }
 
   /**
-   * Spawns a webpack child process using the development configuration.
+   * Spawns a webpack child process using the webpack.dev configuration.
    * *DEVELOPMENT ONLY*
    */
   private async webpack(): Promise<void> {
     const child = spawn(
-      "webpack --config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
+      "npx webpack --config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
       [],
       {
         detached: true,
@@ -166,22 +178,12 @@ export default class Server {
 
       prettyLogger(
         "warn",
-        "Child process (webpack)",
-        "    exited with:\n",
-        `    - CODE: ${chalk.cyanBright(String(code))}`,
-        `    - SIGNAL: ${chalk.cyanBright(signal)}`
+        "  Child process (webpack)",
+        "       exited with:\n",
+        `       - CODE: ${chalk.cyanBright(String(code))}`,
+        `       - SIGNAL: ${chalk.cyanBright(signal)}`
       );
     });
-  }
-
-  /**
-   * Middleware to disable node.js caching
-   */
-  private noCache(req: Request, res: Response, next: NextFunction) {
-    res.header("Cache-Control", "private, no-cache, no-store, must-revalidate");
-    res.header("Expires", "-1");
-    res.header("Pragma", "no-cache");
-    next();
   }
 
   /**
@@ -210,7 +212,6 @@ export default class Server {
     );
     this.appInstance.use("/", (req, res, next) => {
       res.writeHead(200, {
-        // "Cache-Control": "no-cache", // ! ???
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
@@ -226,7 +227,7 @@ export default class Server {
   private staticallyServeFiles(): void {
     // staticly serve styles
     this.appInstance.use(
-      express.static(path.join(__dirname, "..", "client/", "src/", "main.css")) // ! css wont be tsc
+      express.static(path.join(__dirname, "..", "client/", "main.css")) // ! css wont be tsc
     );
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
@@ -242,20 +243,6 @@ export default class Server {
     // sends index.html
     this.appInstance.use("*", (req, res) => {
       res.sendFile(path.join(__dirname, "..", "..", "..", "index.html"));
-    });
-  }
-
-  /**
-   * Handles any errors that have been passed down
-   * without being handled earlier on.
-   */
-  private errorHandlingEndware(): void {
-    this.appInstance.use((err, req, res, next) => {
-      console.error(err);
-      console.error(err.stack);
-      res
-        .status(err.status || 500)
-        .send(err.message || "Internal server error.");
     });
   }
 }
