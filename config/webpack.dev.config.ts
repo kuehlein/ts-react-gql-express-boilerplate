@@ -1,10 +1,10 @@
 import CleanWebpackPlugin from "clean-webpack-plugin";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+// import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
 import { Configuration, HotModuleReplacementPlugin } from "webpack";
 
-// ! noEmit: true --- add to tsconfig.main.json for babel typescript...?
+// ! try to run ts files without emitting them
 
 // root directory relative to compiled `.js` webpack.config
 const rootDir = ["..", "..", "..", ".."];
@@ -12,10 +12,7 @@ const distDir = ["..", ".."];
 
 // repeated settings for config
 const exclude = /node_modules/;
-const include = [
-  path.resolve(__dirname, "..", "client", "index.js"),
-  path.resolve(__dirname, "..", "server", "index.js")
-];
+// const include = path.resolve(__dirname, "..", "client", "index.js");
 const tsconfig = path.resolve(
   __dirname,
   ...rootDir,
@@ -24,16 +21,16 @@ const tsconfig = path.resolve(
 );
 
 // development plugins
-const plugins: HtmlWebpackPlugin[] = [
+const plugins = [
   new HotModuleReplacementPlugin(),
   new HtmlWebpackPlugin({
     template: path.resolve(__dirname, "..", "..", "..", "index.html")
   }),
-  new ForkTsCheckerWebpackPlugin({
-    tsconfig,
-    tslint: path.resolve(__dirname, ...rootDir, "tslint.json"),
-    watch: include
-  }),
+  // new ForkTsCheckerWebpackPlugin({
+  //   tsconfig,
+  //   tslint: path.resolve(__dirname, ...rootDir, "tslint.json"),
+  //   watch: include
+  // }),
   new CleanWebpackPlugin([path.resolve(__dirname, ...distDir, "*.*")], {
     allowExternal: true,
     root: __dirname,
@@ -41,20 +38,21 @@ const plugins: HtmlWebpackPlugin[] = [
   })
 ];
 
+const entry =
+  path.extname(module.id) === ".ts"
+    ? path.resolve(__dirname, "client", "index.tsc")
+    : path.resolve(__dirname, ...rootDir, "client", "index.tsx");
+
 // script for webpack-hot-middleware
 const hotMiddlewareScript: string =
   "webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true";
 
 const webpackDevConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
-  devtool: "cheap-module-eval-source-map",
+  devtool: "source-map", // "cheap-module-eval-source-map",
   entry: {
-    app: [
-      include[0], // client entry
-      hotMiddlewareScript
-    ],
+    app: entry, // [hotMiddlewareScript], // ? somehow include entry...
     vendor: [
-      include[1], // server entry
       "react",
       "react-dom",
       // "react-router" ???
@@ -69,19 +67,18 @@ const webpackDevConfig: Configuration = {
     rules: [
       {
         exclude,
-        include,
+        // include,
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
       },
       {
-        // ! does babel need to handle jsx???
         exclude,
-        include,
+        include: entry,
         loader: "ts-loader",
         options: {
-          // `.json` filetype not compiled into `dist/`
           configFile: tsconfig,
           // happyPackMode: true,
+          // onlyCompileBundledFiles: true, // possibly redundant
           transpileOnly: true
         },
         test: /\.tsx?$/
@@ -89,7 +86,7 @@ const webpackDevConfig: Configuration = {
       {
         enforce: "pre",
         exclude,
-        include,
+        // include,
         loader: "source-map-loader",
         test: /\.js$/
       }
@@ -117,40 +114,7 @@ const webpackDevConfig: Configuration = {
     },
     extensions: [".js", ".jsx", ".ts", ".tsx", "*"]
   },
-  target: "node",
-  watchOptions: {
-    ignored: exclude,
-    poll: 1000
-  }
+  target: "web" // node
 };
 
 export default webpackDevConfig;
-
-/*
-
-
-typescript compiler and babel do the same thing...?
-  *can i just use tsc to target es2015?
-      * in production, target es6, tree shake, then es2015.
-      * in dev, target es2015
-- does ts-loader just use tsc? or babel.....
-    -do i target es2015 in dev, and use ts-loader
-
-
-
-IF I CANT DO WITH TSC....
-
-
-___babel custom config___
-
-babel goes through each file:
-
-  * tsc <that.file>
-        |
-        V
-  * babel transpile to es2015
-
-
-        test: /\.(t|j)sx?$/
-
-*/

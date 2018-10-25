@@ -6,13 +6,14 @@ import "!app!css!./app.css"; // ts-loader stuff
 // import Routes from './routes'
 // import store from "../store";
 
-const App = () => (
-  // <Provider store={store}>
-  //  {/* <Routes /> */}
-  <div style={{ background: "cyan" }}>
-    <h3>yoo</h3>
-  </div>
-  // </Provider>
-);
+const App = () =>
+  console.log("we are at app...") || (
+    // <Provider store={store}>
+    //  {/* <Routes /> */}
+    <div style={{ background: "red" }}>
+      <h3>yoo</h3>
+    </div>
+    // </Provider>
+  );
 
 export default App;

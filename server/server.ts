@@ -183,6 +183,7 @@ export default class Server {
         `       - CODE: ${chalk.cyanBright(String(code))}`,
         `       - SIGNAL: ${chalk.cyanBright(signal)}`
       );
+      console.log(chalk.bold.greenBright("build finished!\n"));
     });
   }
 
