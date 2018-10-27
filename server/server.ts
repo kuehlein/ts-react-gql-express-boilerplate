@@ -1,26 +1,31 @@
 import bodyParser from "body-parser";
 import chalk from "chalk";
+import { spawn } from "child_process";
 import compression from "compression";
-import express from "express";
+import express, { Application } from "express";
 // import session from "express-session";
-import fs from "fs";
 import morgan from "morgan";
 // import passport from "passport";
 import path from "path";
-import tsc, { TranspileOptions } from "typescript";
-import webpack, { Compiler, Configuration } from "webpack";
+import webpack, { Compiler } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
+import config from "../config/webpack.dev.config";
 import db from "./db";
+import { prettyLogger } from "./utils";
 // import gqlServer from "./graphql";
 
 // tslint:disable-next-line
 // const SequelizeStore = require("connect-session-sequelize")(session.Store);
 // const sessionStore = new SequelizeStore({ db });
 
+/**
+ * Contains the logic for running the server in both development and production.
+ * Instantiated in `server/index`.
+ */
 export default class Server {
-  public appInstance: express.Application;
+  public appInstance: Application;
 
   private PORT: number = Number(process.env.PORT) || 3000;
 
@@ -29,75 +34,45 @@ export default class Server {
   }
 
   /**
-   * createAppDev
-   *   *NOTE* --- `this.webpack` must come before `this.staticallyServeFiles`
+   * Creates an app for development, applies `webpack-dev-middleware`
+   * and `webpack-hot-middleware` to enable Hot Module Replacement.
    */
   public createAppDev(): void {
-    // transpile options for rest of files (other than webpack.config + server/index + server/server)
-    // const options: TranspileOptions = {
-    //   compilerOptions: {
-    //     allowSyntheticDefaultImports: true,
-    //     alwaysStrict: true,
-    //     esModuleInterop: true,
-    //     module: tsc.ModuleKind.CommonJS,
-    //     moduleResolution: tsc.ModuleResolutionKind.NodeJs,
-    //     target: tsc.ScriptTarget.ES5
-    //   }
-    // };
-
-    // ! vvv
-    // const exec = require("child_process").exec;
-    // exec("webpack.dev.config.js", (err, stdout, stderr) => {
-    //   //   stdout is the stuff i need?
-    //   console.log("------------", stdout);
-    // });
-
-    // fs.readFile(
-    //   path.resolve(__dirname, "..", "webpack.dev.config.js"),
-    //   "utf8",
-    //   (err, data) => {
-    //     if (err) throw err;
-    //     eval(data); // tsc.transpileModule(data, options).outputText); // logging output???
-    //   }
-    // );
-
     const syncAndListen: Promise<void> = this.syncDb()
-      .then(() => this.createApp())
+      .then(() => this.createAppMain())
       .then(() => this.startListening());
 
-    // const buildAndServe: Promise<void> = this.webpack(config).then(() =>
-    //   this.staticallyServeFiles()
-    // );
+    const buildAndServe: Promise<void> = this.webpack()
+      .then(() => this.webpackDevMiddleware())
+      .then(() => this.staticallyServeFiles());
 
-    // Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
+    Promise.all([syncAndListen, buildAndServe]).catch(err => console.log(err));
   }
 
   /**
-   * createAppProd
+   * Creates an optimized production application build.
    */
   public createAppProd(): void {
-    // in production:
-    // just tsc
-    // then build using "NODE_ENV=production npx webpack --config=public/dist/ts-sourcemap/webpack.prod.config.js"
-    // and ship that bundle
-
     this.syncDb()
-      .then(() => this.createApp())
+      .then(() => this.createAppMain())
       .then(() => this.staticallyServeFiles())
       .catch(err => console.log(err));
   }
 
   /**
-   * syncDb
+   * Syncs the database to begin the creation of the server.
    */
   private async syncDb(): Promise<void> {
     await db.sync();
   }
 
   /**
-   * createApp
+   * Creates the body of the server. Logging middleware (`morgan`),
+   * body parsing middleware (`bodyParser`), compression middleware
+   * (`compression`), as well as session, passport, auth and
+   * the graphql api are applied here.
    */
-  private createApp(): void {
+  private createAppMain(): void {
     // logging middleware
     this.appInstance.use(morgan("dev"));
 
@@ -114,9 +89,10 @@ export default class Server {
   }
 
   /**
-   * sessionAndPassport
+   * Creates an express session and initialized passport with the session.
    */
   private sessionAndPassport(): void {
+    // TODO: ----------------------------------------------------
     // session middleware with passport
     // this.appInstance.use(
     //   session({
@@ -130,113 +106,95 @@ export default class Server {
     // );
     // this.appInstance.use(passport.initialize());
     // this.appInstance.use(passport.session());
+    // TODO: ----------------------------------------------------
   }
 
   /**
-   * auth
+   * Route to user authentication.
    */
   private auth(): void {
     // TODO: app.use('/auth', require('./auth'));
   }
 
   /**
-   * graphql
+   * Route to graphql api.
    */
   private graphql(): void {
-    // gqlServer.applyMiddleware({ app: this.appInstance });
+    // TODO: gqlServer.applyMiddleware({ app: this.appInstance });
 
     // handle requests that miss end points above
     this.errorHandlingEndware();
   }
 
   /**
-   * startListening
-   *   *NOTE* --- This is fancier than it needs to be.
+   * Handles any errors that have been passed down
+   * without being handled earlier on.
+   */
+  private errorHandlingEndware(): void {
+    this.appInstance.use((err, req, res, next) => {
+      console.error(err);
+      console.error(err.stack);
+      res
+        .status(err.status || 500)
+        .send(err.message || "Internal server error.");
+    });
+  }
+
+  /**
+   * Starts listening to the server on `process.env.PORT` or `3000`.
+   * *DEVELOPMENT ONLY*
    */
   private startListening(): void {
     this.appInstance.listen(this.PORT, () => {
-      const indent: string = "       ";
-      const design: string =
-        "`·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·-·._.·´¯`·._.·´";
       const uri: string = `http://localhost:${this.PORT}`;
 
-      // console.log(chalk.magentaBright.bold(`\n${design}\n`));
-      // console.log(
-      //   chalk.cyanBright(`${indent}Listening on:\n`),
-      //   chalk.reset.green.bold(`${indent + indent}-${uri}\n`),
-      //   chalk.reset.cyanBright(`${indent + indent + indent} AND\n`),
-      //   chalk.reset.green.bold(`${indent + indent}-${uri}\n`) // ! ${gqlServer.graphqlPath}\n`
-      // );
-      // console.log(chalk.reset.magentaBright.bold(`${design}\n`));
-
-      console.log(
-        chalk.magentaBright.bold(
-          "`·._.·-·._.·-·._.·´¯`·._.·´¯`·._.·-·._.·-·._.·´"
-        )
-      );
-      console.log(
-        chalk.whiteBright.bold("   |     |     |       |       |     |     |")
-      );
-      console.log(
-        chalk.whiteBright.bold("    ¯¯¯¯¯ ¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯¯¯ ¯¯¯¯¯")
-      );
-      console.log(chalk.cyanBright.bold(`${indent}     Server running on:`));
-      console.log(chalk.greenBright.bold(`${indent + indent + uri}`));
-      console.log(chalk.cyanBright.bold(`${indent + indent + indent} AND`));
-      console.log(chalk.greenBright.bold(`${indent + "   " + uri}/graphql`));
-      console.log(
-        chalk.whiteBright.bold("      _____ _____ _____ _____ _____ _____")
-      );
-      console.log(
-        chalk.whiteBright.bold("     |     |     |     |     |     |     |")
-      );
-      console.log(
-        chalk.magentaBright.bold(
-          "`·.·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·-·´¯`·.·´"
-        )
+      prettyLogger(
+        "log",
+        "Listening on:\n",
+        `  - ${chalk.greenBright(uri)}`,
+        "             AND",
+        `  - ${chalk.greenBright(uri)}` // ! ${gqlServer.graphqlPath}\n`
       );
     });
   }
 
   /**
-   * webpack
-   *   *NOTE* --- Do not use nodemon or anything that restarts server... // ! details ???
+   * Spawns a webpack child process using the webpack.dev configuration.
+   * *DEVELOPMENT ONLY*
    */
-  private async webpack(config /* : Configuration */): Promise<void> {
-    // ! create config file for whole project and one for just the first three
-    // * dont overlap compiling
-    const options: TranspileOptions = {
-      compilerOptions: {
-        allowSyntheticDefaultImports: true,
-        alwaysStrict: true,
-        esModuleInterop: true,
-        module: tsc.ModuleKind.CommonJS,
-        moduleResolution: tsc.ModuleResolutionKind.NodeJs,
-        // noEmit: true, // what is the outdir / outfile ???
-        target: tsc.ScriptTarget.ES5
+  private async webpack(): Promise<void> {
+    const child = spawn(
+      "npx webpack --config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
+      [],
+      {
+        detached: true,
+        shell: true,
+        stdio: "inherit"
       }
-    };
+    );
 
-    // ?????????
-    // "webpack --config webpack.config.vendor.js
+    child.on("exit", (code, signal) => {
+      child.kill();
 
-    // process.argv
-    // process.execArgv
+      prettyLogger(
+        "warn",
+        "  Child process (webpack)",
+        "       exited with:\n",
+        `       - CODE: ${chalk.cyanBright(String(code))}`,
+        `       - SIGNAL: ${chalk.cyanBright(signal)}`
+      );
+      console.log(chalk.bold.greenBright("build finished!\n"));
+    });
+  }
 
-    // * spawn a child process???
-
-    // process.exit([code])
-    // process.execPath
-
-    // ? process.nextTick(callback[, ...args])
-    // ? process.stdin
-    // ? process.stdout
-
-    // ! i have no idea about this
-    // Function(tsc.transpileModule(configString, options).outputText);
-
+  /**
+   * Applies `webpack-dev-middleware` and `webpack-hot-middleware`
+   * to enable Hot Module Replacement in development.
+   * *NOTE* --- Do not use nodemon or anything that restarts server...
+   * *DEVELOPMENT ONLY*
+   */
+  private webpackDevMiddleware(): void {
     const compiler: Compiler = webpack(config);
-    const hotMiddlewareScript: string = `webpack-hot-middleware/client?path=/__webpack_hmr&timeout=4000&reload=true`;
 
     this.appInstance.use(
       webpackMiddleware(compiler, {
@@ -255,22 +213,22 @@ export default class Server {
     );
     this.appInstance.use("/", (req, res, next) => {
       res.writeHead(200, {
-        "Cache-Control": "no-cache",
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
-      res.end(hotMiddlewareScript);
+      res.end();
     });
   }
 
   /**
-   * staticallyServeFiles
-   *   *NOTE* --- The relative paths refer to the locations of the files after being compiled
+   * Serves the static bundle generated by webpack,
+   * as well as the other static assets like css and html files.
+   * *NOTE* --- The relative paths refer to the locations of the files after being transpiled
    */
   private staticallyServeFiles(): void {
     // staticly serve styles
     this.appInstance.use(
-      express.static(path.join(__dirname, "..", "client/", "src/", "main.css")) // ! css wont be tsc
+      express.static(path.join(__dirname, "..", "client/", "main.css")) // ! css wont be tsc
     );
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
@@ -288,39 +246,4 @@ export default class Server {
       res.sendFile(path.join(__dirname, "..", "..", "..", "index.html"));
     });
   }
-
-  /**
-   * errorHandlingEndware
-   */
-  private errorHandlingEndware(): void {
-    this.appInstance.use((err, req, res, next) => {
-      console.error(err);
-      console.error(err.stack);
-      res
-        .status(err.status || 500)
-        .send(err.message || "Internal server error.");
-    });
-  }
 }
-
-/*
-
-`
-                _.·´¯`·.__.·´¯`·.__
-                                     ¯¯--_
-                                          ¯-_
-      _____.·---···´¯¯¯¯¯¯¯¯¯¯¯`···---·._____
- /  /_.·-·._.·-·._.·´¯`·._.·´¯`·._.·-·._.·-·._\
-   /_|     |     |       |       |     |     |_\
-  /   `---- \   /|       |       |\   / ----´   \
-  |          `¯´  ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯  `¯´          |\
-(  \                                           /  )
- \  \                                         /  /
-  \  \    ___ _____ _____ _____ _____ ___    /  /
-   \  ¯¯¯`---'----.|_____|_____|.----'---´¯¯¯  /
-     -__                                   __-
-         ¯¯¯---_____________________---¯¯¯
-`
-
-
-*/

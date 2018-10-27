@@ -1,3 +1,11 @@
+/**
+ * ! This module is an entry point !
+ *   * Modify the webpack.config + package.json to make adjustments
+ *   * to the locations of the entrypoints in this project.
+ *
+ *   * Be careful when modifying this module.
+ */
+
 // import passport from "passport";
 import path from "path";
 
