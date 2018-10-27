@@ -19,15 +19,14 @@
   },
   "scripts": {
     "postinstall": "touch secrets.js",
-    "type-check": "npm run compile-prod --noEmit",
     "compile-dev": "tsc -p config/tsconfig.server.json",
     "compile-prod": "tsc -p config/tsconfig.prod.json",
+    "type-check": "npm run compile-prod --noEmit",
     "server-dev": "NODE_ENV=development DATABASE_URL=postgres://localhost/ts-react-gql-express-boilerplate",
     "start-server": "npm run server-dev && node public/dist/ts-sourcemap/server/index.js",
     "watch-server": "npm run server-dev && nodemon public/dist/ts-sourcemap/server/index.js",
     "dev": "npm run compile-dev && npm run start-server",
     "prod": "npm run compile-prod && NODE_ENV=production npx webpack --config=public/dist/ts-sourcemap/webpack.prod.config.js",
-    "meh": "tsc -p config/tsconfig.client.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "ISC",

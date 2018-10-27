@@ -2,7 +2,11 @@ import CleanWebpackPlugin from "clean-webpack-plugin";
 // import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
-import { Configuration, HotModuleReplacementPlugin } from "webpack";
+import {
+  Configuration,
+  HotModuleReplacementPlugin
+  // NamedModulesPlugin
+} from "webpack";
 
 const rootDir = ["..", "..", "..", ".."];
 const distDir = ["..", ".."];
@@ -11,7 +15,7 @@ const distDir = ["..", ".."];
 const exclude = /node_modules/;
 const include =
   path.extname(module.id) === ".ts"
-    ? path.resolve(__dirname, "client", "index.tsc")
+    ? path.resolve(__dirname, "client", "index.tsx")
     : path.resolve(__dirname, ...rootDir, "client", "index.tsx");
 const tsconfig = path.resolve(
   __dirname,
@@ -21,7 +25,7 @@ const tsconfig = path.resolve(
 );
 
 // // prints more readable module names in the browser console on HMR updates
-// new webpack.NamedModulesPlugin(),
+// new NamedModulesPlugin(),
 
 // development plugins
 const plugins = [
@@ -47,18 +51,14 @@ const hotMiddlewareScript: string =
 
 const webpackDevConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
-  devtool: "source-map", // "cheap-module-eval-source-map",
+  devtool: "cheap-module-eval-source-map",
   entry: {
     app: ["react-hot-loader/patch", include, hotMiddlewareScript],
-    vendor: [
-      "react",
-      "react-dom"
-      // "react-router"
-    ]
+    vendor: ["react", "react-dom", hotMiddlewareScript]
   },
-  // externals: {
-  //   react, react-dom, react-router-dom
-  // },
+  externals: {
+    // react, react-dom, react-router
+  },
   mode: "development",
   module: {
     rules: [
@@ -97,17 +97,6 @@ const webpackDevConfig: Configuration = {
   },
   plugins,
   resolve: {
-    alias: {
-      react: path.resolve(
-        path.join(__dirname, ...rootDir, "node_modules", "react")
-      ),
-      "react-hot-loader": path.resolve(
-        path.join(__dirname, ...rootDir, "node_modules", "react-hot-loader")
-      )
-      // "react-router-dom": path.resolve(
-      //   path.join(__dirname, ...rootDir, "node_modules", "react-router-dom")
-      // )
-    },
     extensions: [".js", ".ts", ".tsx", "*"]
   },
   target: "web"

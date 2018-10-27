@@ -11,13 +11,11 @@ import ReactDOM from "react-dom";
 
 import { App } from "./components";
 
-declare let module: any;
-
 ReactDOM.render(<App />, document.getElementById("app"));
 
-// Hot Module Replacement (HMR)
-if (module.hot) {
-  module.hot.accept("./components/App", () => {
+// enables Hot Module Replacement (HMR)
+if ((module as any).hot) {
+  (module as any).hot.accept("./components/App", () => {
     // for HMR to work, `App` must be re-required
     const NextApp = require("./components/App").default;
     ReactDOM.render(<NextApp />, document.getElementById("app"));
