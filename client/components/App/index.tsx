@@ -1,7 +1,7 @@
 import React, { SFC } from "react";
 // import { Provider } from "react-redux";
 
-import "!app!css!./app.css"; // ts-loader stuff
+// import "!app!css!./app.css"; // ts-loader stuff // ! ???
 
 // import Routes from './routes'
 // import store from "../store";
@@ -15,11 +15,12 @@ import "!app!css!./app.css"; // ts-loader stuff
 
 const App: SFC = () => (
   <div style={{ background: "red" }}>
-    <h3>yoo</h3>
+    <h3>yoooooo</h3>
   </div>
 );
 
 export default App;
+
 // export default class App extends React.Component {
 //   public render() {
 //     return (

@@ -54,11 +54,11 @@ const webpackDevConfig: Configuration = {
   devtool: "cheap-module-eval-source-map",
   entry: {
     app: ["react-hot-loader/patch", include, hotMiddlewareScript],
-    vendor: ["react", "react-dom", hotMiddlewareScript]
+    vendor: ["react", "react-dom", hotMiddlewareScript] // react-router
   },
-  externals: {
-    // react, react-dom, react-router
-  },
+  // externals: {
+  //   // react, react-dom, react-router
+  // },
   mode: "development",
   module: {
     rules: [
@@ -70,7 +70,7 @@ const webpackDevConfig: Configuration = {
       },
       {
         exclude,
-        include,
+        // include,
         loader: "ts-loader",
         options: {
           configFile: tsconfig,
@@ -92,11 +92,22 @@ const webpackDevConfig: Configuration = {
   },
   output: {
     filename: "[name].bundle.js",
-    path: path.join(__dirname, ...distDir),
-    publicPath: path.join(__dirname, ...distDir, "static/")
+    path: path.join(__dirname, ...distDir)
+    // publicPath: path.join(__dirname, ...distDir, "static/") // ! <--- dangerous..?
   },
   plugins,
   resolve: {
+    // alias: {
+    //   react: path.resolve(
+    //     path.join(__dirname, ...rootDir, "node_modules", "react")
+    //   ),
+    //   "react-hot-loader": path.resolve(
+    //     path.join(__dirname, ...rootDir, "node_modules", "react-hot-loader")
+    //   )
+    //   // "react-router-dom": path.resolve(
+    //   //   path.join(__dirname, ...rootDir, "node_modules", "react-router-dom")
+    //   // )
+    // },
     extensions: [".js", ".ts", ".tsx", "*"]
   },
   target: "web"
