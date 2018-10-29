@@ -14,22 +14,16 @@ import React, { SFC } from "react";
 // https://github.com/reactjs/react-router/issues/2182
 
 const App: SFC = () => (
-  <div style={{ background: "red" }}>
+  // <Provider store={store}>
+  // <Routes />
+  <div style={{ background: "cyan" }}>
+    <h3>yoooooo</h3>
     <h3>yoooooo</h3>
   </div>
+  // </Provider>
 );
 
 export default App;
-
-// export default class App extends React.Component {
-//   public render() {
-//     return (
-//       <div style={{ background: "red" }}>
-//         <h3>yoo</h3>
-//       </div>
-//     );
-//   }
-// }
 
 /*
 
@@ -38,14 +32,5 @@ interface IMyProps {
   age: number
 }
 const App: SFC<IMyProps> = () => {}
-
-const App: SFC = () => (
-  <Provider store={store}>
-    <Routes />
-    <div style={{ background: "red" }}>
-      <h3>yoo</h3>
-    </div>
-  </Provider>
-);
 
 */

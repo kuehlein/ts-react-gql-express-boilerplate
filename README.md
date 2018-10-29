@@ -70,17 +70,3 @@ CHANGES MADE: (server)
 # --------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------
-
-server/server...
-
-    // transpile options for rest of files (other than webpack.config + server/index + server/server)
-    // const options: TranspileOptions = {
-    //   compilerOptions: {
-    //     allowSyntheticDefaultImports: true,
-    //     alwaysStrict: true,
-    //     esModuleInterop: true,
-    //     module: tsc.ModuleKind.CommonJS,
-    //     moduleResolution: tsc.ModuleResolutionKind.NodeJs,
-    //     target: tsc.ScriptTarget.ES5
-    //   }
-    // };

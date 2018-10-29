@@ -8,11 +8,22 @@ const distDir = ["..", ".."];
 
 // repeated settings for config
 const exclude = /node_modules/;
-const include = path.join(__dirname, "..", "client", "index.js");
+const include =
+  path.extname(module.id) === ".ts"
+    ? path.resolve(__dirname, "client", "index.tsx")
+    : path.resolve(__dirname, ...rootDir, "client", "index.tsx");
+const tsconfig = path.resolve(
+  __dirname,
+  ...rootDir,
+  "config",
+  "tsconfig.prod.json"
+);
+
+// production plugins
 const plugins = [new optimize.ModuleConcatenationPlugin()];
 const minimizer = [
   new UglifyJsPlugin({
-    parallel: { cache: false, workers: 2 },
+    parallel: { cache: false },
     uglifyOptions: {
       compress: {
         comparisons: true,
@@ -42,48 +53,30 @@ const webpackProdConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
   devtool: "cheap-module-source-map",
   entry: include,
-  // externals: {
-  //   // react, react-dom, react-router
-  // },
   mode: "production",
   module: {
     rules: [
       {
         exclude,
         include,
-        options: {
-          babelrc: false,
-          cacheDirectory: true,
-          plugins: [
-            ["@babel/plugin-proposal-class-properties", { loose: true }],
-            ["@babel/plugin-proposal-object-rest-spread", { loose: true }],
-            ["@babel/plugin-proposal-decorators", { legacy: true }],
-            "react-hot-loader/babel"
-          ],
-          presets: [
-            ["@babel/preset-env", { targets: { browsers: "last 2 versions" } }],
-            [
-              "@babel/preset-typescript",
-              {
-                configFileName: path.resolve(
-                  __dirname,
-                  ...rootDir,
-                  "config",
-                  "tsconfig.client.json"
-                )
-              }
-            ],
-            "@babel/preset-react"
-          ]
-        },
-        test: /\.(j|t)sx?$/,
-        use: "babel-loader"
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"]
       },
       {
         exclude,
+        loader: "ts-loader",
+        options: {
+          configFile: tsconfig,
+          happyPackMode: true
+        },
+        test: /\.tsx?$/
+      },
+      {
+        enforce: "pre",
+        exclude,
         include,
-        test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        loader: "source-map-loader",
+        test: /\.js$/
       }
     ]
   },
@@ -96,16 +89,9 @@ const webpackProdConfig: Configuration = {
   },
   plugins,
   resolve: {
-    alias: {
-      react: path.resolve(
-        path.join(__dirname, ...rootDir, "node_modules", "react")
-      ),
-      "react-hot-loader": path.resolve(
-        path.join(__dirname, ...rootDir, "node_modules", "react-hot-loader")
-      )
-    },
-    extensions: [".js", ".jsx", ".ts", ".tsx", "*"]
-  }
+    extensions: [".js", ".ts", ".tsx", "*"]
+  },
+  target: "web"
 };
 
 export default webpackProdConfig;
