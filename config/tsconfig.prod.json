@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "lib": ["dom", "es2015", "esnext.asynciterable"],
-    "target": "es6"
+    "lib": ["dom", "es6", "esnext.asynciterable"],
+    "target": "es2015"
   },
   "extends": "./tsconfig.main.json",
-  "exclude": ["../node_modules", "**/*.spec.ts", "./webpack.dev.config.ts"],
-  "include": [
-    "./webpack.prod.config.ts",
+  "exclude": [
+    "../node_modules",
+    "**/*.spec.ts",
+    "./webpack.dev.config.ts",
     "../client/index.tsx",
     "../server/index.ts"
-  ]
+  ],
+  "include": ["./webpack.prod.config.ts"]
 }
