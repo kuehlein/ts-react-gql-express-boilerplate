@@ -1,18 +1,8 @@
-/**
- * ! This module is an entry point !
- *   * Modify the webpack.config + package.json to make adjustments
- *   * to the locations of the entrypoints in this project.
- *
- *   * Be careful when modifying this module.
- */
-
 import React from "react";
 import ReactDOM from "react-dom";
 import { AppContainer as HotContainer } from "react-hot-loader"; // ???
 
 import { App } from "./components";
-
-// const root = document.getElementById("app");
 
 ReactDOM.render(
   <HotContainer>

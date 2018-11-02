@@ -1,4 +1,4 @@
-import React, { SFC } from "react";
+import React, { Component } from "react";
 // import { Provider } from "react-redux";
 
 // import "!app!css!./app.css"; // ts-loader stuff // ! ???
@@ -13,17 +13,29 @@ import React, { SFC } from "react";
 // You can ignore this warning. For details, see:
 // https://github.com/reactjs/react-router/issues/2182
 
-const App: SFC = () => (
-  // <Provider store={store}>
-  // <Routes />
-  <div style={{ background: "cyan" }}>
-    <h3>yoooooo</h3>
-    <h3>yoooooo</h3>
-  </div>
-  // </Provider>
-);
+export default class App extends Component {
+  public state: { counter: number };
 
-export default App;
+  constructor(props) {
+    super(props);
+    this.state = {
+      counter: 0
+    };
+  }
+
+  public render() {
+    return (
+      <div style={{ background: "orange" }}>
+        <h3>current count: {this.state.counter}</h3>
+        <button
+          onClick={() => this.setState({ counter: this.state.counter + 1 })}
+        >
+          +1
+        </button>
+      </div>
+    );
+  }
+}
 
 /*
 

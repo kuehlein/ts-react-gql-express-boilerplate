@@ -1,11 +1,3 @@
-/**
- * ! This module is an entry point !
- *   * Modify the webpack.config + package.json to make adjustments
- *   * to the locations of the entrypoints in this project.
- *
- *   * Be careful when modifying this module.
- */
-
 // import passport from "passport";
 import path from "path";
 
@@ -17,7 +9,7 @@ const app = new Server();
 // * path to root directory from compiled typescript
 if (process.env.NODE_ENV !== "production") {
   // tslint:disable-next-line
-  require(path.resolve(__dirname, "..", "..", "..", "..", "secrets.js"));
+  require(path.resolve(__dirname, "..", "..", "secrets.js"));
 }
 
 // passport registration
@@ -33,8 +25,6 @@ if (process.env.NODE_ENV !== "production") {
 //   }
 // );
 
-// This evaluates as true when this file is run directly from the command line,
-// It will evaluate false when this module is required by another module - (eg. tests)
-require.main === module ? app.createAppDev() : app.createAppProd();
+app.createApp();
 
 export default app;
