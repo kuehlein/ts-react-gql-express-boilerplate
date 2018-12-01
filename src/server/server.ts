@@ -10,8 +10,7 @@ import webpack, { Compiler } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
-// import clientConfig from "../configs/webpack.client.config";
-import serverConfig from "../configs/webpack.server.config";
+import config from "../webpack.dev.config";
 import db from "./db";
 import { prettyLogger } from "./utils";
 // import gqlServer from "./graphql";
@@ -47,8 +46,8 @@ export default class Server {
 
     this.syncDb()
       .then(() => this.applyMiddleware())
-      .then(() => isDev && this.startListening())
-      .then(() => isDev && this.webpackDevMiddleware())
+      .then(() => this.startListening())
+      .then(() => this.webpackDevMiddleware())
       .then(() => this.staticallyServeFiles())
       .catch(err => console.log(err));
   }
@@ -159,43 +158,42 @@ export default class Server {
    * *DEVELOPMENT ONLY*
    */
   private webpackDevMiddleware(): void {
-    // clientConfig + serverConfig
-
-    // const clientCompiler: Compiler = webpack(clientConfig);
-    const serverCompiler: Compiler = webpack(serverConfig);
+    const compiler: Compiler = webpack(config);
+    // ! vvvv use??? vvvv
     this.appInstance.use(
-      webpackMiddleware(serverCompiler, {
-        publicPath: serverConfig.output.publicPath,
+      webpackMiddleware(compiler, {
+        publicPath: config.output.publicPath,
         serverSideRender: true,
         stats: {
           colors: true
         }
       })
     );
-    // this.appInstance.use(
-    //   webpackMiddleware(clientCompiler, {
-    //     publicPath: clientConfig.output.publicPath,
-    //     serverSideRender: true,
-    //     stats: {
-    //       colors: true
-    //     }
-    //   })
-    // );
-    // this.appInstance.use(
-    //   webpackHotMiddleware(clientCompiler, {
-    //     heartbeat: 2000,
-    //     log: console.log,
-    //     path: "__webpack_hmr",
-    //     reload: true
-    //   })
-    // );
-    // this.appInstance.use("/", (req, res, next) => {
-    //   res.writeHead(200, {
-    //     Connection: "keep-alive",
-    //     "Content-Type": "text/event-stream"
-    //   });
-    //   res.end();
-    // });
+    // ! ^^^^ use??? ^^^^
+    this.appInstance.use(
+      webpackMiddleware(compiler, {
+        publicPath: config.output.publicPath,
+        serverSideRender: true,
+        stats: {
+          colors: true
+        }
+      })
+    );
+    this.appInstance.use(
+      webpackHotMiddleware(compiler, {
+        heartbeat: 2000,
+        log: console.log,
+        path: "__webpack_hmr",
+        reload: true
+      })
+    );
+    this.appInstance.use("/", (req, res, next) => {
+      res.writeHead(200, {
+        Connection: "keep-alive",
+        "Content-Type": "text/event-stream"
+      });
+      res.end();
+    });
   }
 
   /**
@@ -212,11 +210,10 @@ export default class Server {
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
     this.appInstance
       .use(express.static(path.join(__dirname, "..", "..", "..")))
-      .use(
-        (req, res, next) =>
-          path.extname(req.path).length
-            ? next(new Error(`404 - Not found`))
-            : next()
+      .use((req, res, next) =>
+        path.extname(req.path).length
+          ? next(new Error(`404 - Not found`))
+          : next()
       );
 
     // sends index.html

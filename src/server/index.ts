@@ -6,10 +6,9 @@ import Server from "./server";
 
 const app = new Server();
 
-// * path to root directory from compiled typescript
 if (process.env.NODE_ENV !== "production") {
   // tslint:disable-next-line
-  require(path.resolve(__dirname, "..", "..", "secrets.js"));
+  // require(path.resolve(__dirname, "..", "..", "secrets.js")); // ! the request of a dependency is an expression...
 }
 
 // passport registration

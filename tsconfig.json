@@ -12,7 +12,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "outDir": "ts-sourcemap/configs/",
+    "outDir": "ts-sourcemap/",
     "preserveConstEnums": true,
     "pretty": true,
     "removeComments": true,
@@ -20,8 +20,5 @@
     "target": "es2015"
   },
   "exclude": ["./node_modules", "**/*.spec.ts"],
-  "files": [
-    "./src/configs/webpack.server.config.ts",
-    "./src/configs/webpack.client.config.ts"
-  ]
+  "files": ["./src/server/index.ts"]
 }

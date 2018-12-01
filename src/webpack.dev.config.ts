@@ -1,11 +1,17 @@
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
 import { Configuration, HotModuleReplacementPlugin } from "webpack";
 
-// relative path to public directory
-const rootDir = ["..", ".."];
-
-// repeated settings for config
+// repeated config settings / paths
+const rootDir = [".."];
+const include = path.resolve(
+  __dirname,
+  ...rootDir,
+  "src",
+  "client",
+  "index.tsx"
+);
 const exclude = /node_modules/;
 
 // development plugins
@@ -16,20 +22,29 @@ const plugins = [
     tsconfig: path.resolve(__dirname, ...rootDir, "tsconfig.json"), // ???
     tslint: path.resolve(__dirname, ...rootDir, "tslint.json"),
     watch: path.resolve(__dirname, ...rootDir, "src", "client", "index.tsx") // ???
+  }),
+  new HtmlWebpackPlugin({
+    favicon: path.resolve(__dirname, ...rootDir, "public", "favicon.ico"),
+    template: path.resolve(__dirname, ...rootDir, "public", "index.html")
   })
   // new webpack.optimize.CommonsChunkPlugin('common.js') // ! ???
 ];
 
-type baseConfig = (file: string, extraPlugins: any[]) => Configuration;
+const hotMiddlewareScript: string =
+  "webpack-hot-middleware/client?path=/__webpack_hmr&timeout=4000&reload=true";
 
-const baseConfig: baseConfig = (file, extraPlugins) => ({
+const devConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
   devtool: "cheap-module-eval-source-map",
+  entry: {
+    client: ["react-hot-loader/patch", hotMiddlewareScript, include]
+  },
+  mode: "development",
   module: {
     rules: [
       {
         exclude,
-        include: file,
+        include,
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
       },
@@ -37,12 +52,7 @@ const baseConfig: baseConfig = (file, extraPlugins) => ({
         exclude,
         loader: "ts-loader",
         options: {
-          configFile: path.resolve(
-            __dirname,
-            ...rootDir,
-            "configs",
-            "tsconfig.json"
-          ),
+          configFile: path.resolve(__dirname, ...rootDir, "tsconfig.json"),
           happyPackMode: true,
           onlyCompileBundledFiles: true
         },
@@ -51,7 +61,7 @@ const baseConfig: baseConfig = (file, extraPlugins) => ({
       {
         enforce: "pre",
         exclude,
-        include: path.resolve(__dirname, ".."),
+        include: path.resolve(__dirname, ".."), // ! ???
         loader: "source-map-loader",
         test: /\.js$/
       }
@@ -65,10 +75,11 @@ const baseConfig: baseConfig = (file, extraPlugins) => ({
     path: path.resolve(__dirname, ...rootDir, "public", "dist"),
     publicPath: "/"
   },
-  plugins: [...plugins, ...extraPlugins],
+  plugins,
   resolve: {
     extensions: [".js", ".ts", ".tsx", "*"]
-  }
-});
+  },
+  target: "web"
+};
 
-export default baseConfig;
+export default devConfig;
