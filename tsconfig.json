@@ -3,7 +3,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,
-    "baseUrl": "../",
+    "baseUrl": ".",
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -12,7 +12,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "outDir": "../ts-sourcemap/",
+    "outDir": "ts-sourcemap/configs/",
     "preserveConstEnums": true,
     "pretty": true,
     "removeComments": true,
@@ -20,5 +20,8 @@
     "target": "es2015"
   },
   "exclude": ["./node_modules", "**/*.spec.ts"],
-  "files": ["./webpack.server.config.ts", "./webpack.client.config.ts"]
+  "files": [
+    "./src/configs/webpack.server.config.ts",
+    "./src/configs/webpack.client.config.ts"
+  ]
 }

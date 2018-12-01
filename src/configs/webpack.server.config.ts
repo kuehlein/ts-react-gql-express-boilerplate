@@ -1,6 +1,8 @@
 import CleanWebpackPlugin from "clean-webpack-plugin";
 import path from "path";
+import { Configuration } from "webpack";
 import webpackMerge from "webpack-merge";
+import nodeExternals from "webpack-node-externals";
 
 import baseConfig from "./webpack.base.config";
 
@@ -8,9 +10,15 @@ const hotMiddlewareScript: string =
   "webpack-hot-middleware/client?path=/__webpack_hmr&timeout=4000&reload=true";
 
 // relative path to public directory
-const rootDir = path.extname(module.id) === ".ts" ? [".."] : ["..", ".."];
+const rootDir = ["..", ".."];
 
-const serverEntry = path.resolve(__dirname, ...rootDir, "server", "index.ts");
+const serverEntry = path.resolve(
+  __dirname,
+  ...rootDir,
+  "src",
+  "server",
+  "index.ts"
+);
 
 // development plugins
 const plugins = [
@@ -27,12 +35,16 @@ const plugins = [
   )
 ];
 
-const serverConfig = webpackMerge(baseConfig(serverEntry, plugins), {
-  entry: {
-    server: [/* hotMiddlewareScript, */ serverEntry]
-  },
-  mode: "development",
-  target: "node"
-});
+const serverConfig: Configuration = webpackMerge(
+  baseConfig(serverEntry, plugins),
+  {
+    entry: {
+      server: [/* hotMiddlewareScript, */ serverEntry]
+    },
+    externals: [nodeExternals()],
+    mode: "development",
+    target: "node"
+  }
+);
 
 export default serverConfig;

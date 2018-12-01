@@ -3,7 +3,7 @@ import path from "path";
 import { Configuration, HotModuleReplacementPlugin } from "webpack";
 
 // relative path to public directory
-const rootDir = path.extname(module.id) === ".ts" ? [".."] : ["..", ".."];
+const rootDir = ["..", ".."];
 
 // repeated settings for config
 const exclude = /node_modules/;
@@ -13,11 +13,11 @@ const plugins = [
   new HotModuleReplacementPlugin(),
   new ForkTsCheckerWebpackPlugin({
     checkSyntacticErrors: true,
-    tsconfig: path.resolve(__dirname, ...rootDir, "configs", "tsconfig.json"),
+    tsconfig: path.resolve(__dirname, ...rootDir, "tsconfig.json"), // ???
     tslint: path.resolve(__dirname, ...rootDir, "tslint.json"),
-    watch: path.resolve(__dirname, ...rootDir, "client", "index.tsx")
+    watch: path.resolve(__dirname, ...rootDir, "src", "client", "index.tsx") // ???
   })
-  // new webpack.optimize.CommonsChunkPlugin('comnmon.js') // ! ???
+  // new webpack.optimize.CommonsChunkPlugin('common.js') // ! ???
 ];
 
 type baseConfig = (file: string, extraPlugins: any[]) => Configuration;
