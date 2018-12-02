@@ -4,6 +4,8 @@ import { hot } from "react-hot-loader";
 
 // import "!app!css!./app.css"; // ts-loader stuff // ! ???
 
+import "./app.css";
+
 // import Routes from './routes'
 // import store from "../store";
 
@@ -29,6 +31,7 @@ class App extends Component {
       <div style={{ background: "orange" }}>
         <h3>current count: {this.state.counter}</h3>
         <button
+          className="red"
           onClick={() => this.setState({ counter: this.state.counter + 1 })}
         >
           +1

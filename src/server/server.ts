@@ -168,9 +168,8 @@ export default class Server {
 
     this.appInstance.use(
       webpackMiddleware(compiler, {
-        // logLevel: "warn",
+        logLevel: "warn",
         publicPath: config.output.publicPath,
-        // serverSideRender: true,
         stats: {
           colors: true
         }
@@ -180,7 +179,7 @@ export default class Server {
       webpackHotMiddleware(compiler, {
         heartbeat: 2000,
         log: console.log,
-        path: "", // __webpack_hmr
+        path: "",
         reload: true
       })
     );
@@ -189,7 +188,6 @@ export default class Server {
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
-      // ! res.end();
     });
   }
 
