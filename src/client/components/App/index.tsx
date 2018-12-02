@@ -2,8 +2,6 @@ import React, { Component } from "react";
 import { hot } from "react-hot-loader";
 // import { Provider } from "react-redux";
 
-// import "!app!css!./app.css"; // ts-loader stuff // ! ???
-
 import "./app.css";
 
 // import Routes from './routes'

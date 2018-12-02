@@ -82,10 +82,10 @@ export default devConfig;
 
 /*
 
-get prod config working
 get watch-server working
 dry up tsconfigs --- consolidate into 1?
 optimize tsforkcheckerplugin
+stop watch-server from repeating
 
  |
  V

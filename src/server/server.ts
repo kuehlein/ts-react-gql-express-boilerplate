@@ -24,9 +24,21 @@ import { prettyLogger } from "./utils";
  * Instantiated in `server/index`.
  */
 export default class Server {
+  /**
+   * The instance of the express server.
+   */
   public appInstance: Application;
 
+  /**
+   * The port that the application runs on.
+   */
   private PORT: number = Number(process.env.PORT) || 3000;
+
+  /**
+   * If `enabled`, Hot Module Replacement is active.
+   */
+  private HMR: "disabled" | "enabled" =
+    process.env.HMR === "enabled" ? "enabled" : "disabled";
 
   constructor() {
     this.appInstance = express();
@@ -40,7 +52,7 @@ export default class Server {
     this.syncDb()
       .then(() => this.applyMiddleware())
       .then(() => this.startListening())
-      .then(() => this.webpackDevMiddleware()) // ! dont use for "watch-server"
+      .then(() => this.HMR === "enabled" && this.webpackDevMiddleware())
       .then(() => this.staticallyServeFiles())
       .catch(err => console.log(err));
   }
