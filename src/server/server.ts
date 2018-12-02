@@ -163,9 +163,6 @@ export default class Server {
    */
   private webpackDevMiddleware(): void {
     const compiler: Compiler = webpack(config);
-
-    // ! response never being sent...
-
     this.appInstance.use(
       webpackMiddleware(compiler, {
         logLevel: "warn",
@@ -197,23 +194,28 @@ export default class Server {
    * *NOTE* --- The relative paths refer to the locations of the files after being transpiled
    */
   private staticallyServeFiles(): void {
+    // path to root
+    const rootDir = ["..", ".."];
+
     // staticly serve styles
     this.appInstance.use(
-      express.static(path.join(__dirname, "..", "client", "main.css")) // ! css wont be tsc
+      express.static(
+        path.join(__dirname, ...rootDir, "src", "client", "main.css")
+      )
     );
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
     this.appInstance
-      .use(express.static(path.join(__dirname, "..", "..")))
+      .use(express.static(path.join(__dirname, ...rootDir)))
       .use((req, res, next) =>
         path.extname(req.path).length
-          ? next(new Error(`404 - Not found`))
+          ? next(new Error("404 - Not found"))
           : next()
       );
 
     // sends index.html
     this.appInstance.use("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "..", "..", "public", "index.html"));
+      res.sendFile(path.join(__dirname, ...rootDir, "public", "index.html"));
     });
   }
 }

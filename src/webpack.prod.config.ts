@@ -2,21 +2,15 @@ import path from "path";
 import { Configuration, optimize } from "webpack";
 import UglifyJsPlugin from "webpack-uglify-js-plugin";
 
-// root directory relative to compiled `.js` webpack.config
-const rootDir = ["..", "..", "..", ".."];
-const distDir = ["..", ".."];
-
-// repeated settings for config
+// repeated config settings / paths
+const rootDir = [".."];
 const exclude = /node_modules/;
-const include =
-  path.extname(module.id) === ".ts"
-    ? path.resolve(__dirname, "client", "index.tsx")
-    : path.resolve(__dirname, ...rootDir, "client", "index.tsx");
-const tsconfig = path.resolve(
+const include = path.resolve(
   __dirname,
   ...rootDir,
-  "config",
-  "tsconfig.prod.json"
+  "src",
+  "client",
+  "index.tsx"
 );
 
 // production plugins
@@ -49,7 +43,7 @@ const minimizer = [
   })
 ];
 
-const webpackProdConfig: Configuration = {
+const prodConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
   devtool: "cheap-module-source-map",
   entry: include,
@@ -58,7 +52,6 @@ const webpackProdConfig: Configuration = {
     rules: [
       {
         exclude,
-        include,
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
       },
@@ -66,15 +59,19 @@ const webpackProdConfig: Configuration = {
         exclude,
         loader: "ts-loader",
         options: {
-          configFile: tsconfig,
-          happyPackMode: true
+          configFile: path.resolve(
+            __dirname,
+            ...rootDir,
+            "tsconfig.client.json"
+          ),
+          happyPackMode: true,
+          onlyCompileBundledFiles: true
         },
         test: /\.tsx?$/
       },
       {
         enforce: "pre",
         exclude,
-        include,
         loader: "source-map-loader",
         test: /\.js$/
       }
@@ -84,8 +81,7 @@ const webpackProdConfig: Configuration = {
     minimizer
   },
   output: {
-    filename: "[name].bundle.js",
-    path: path.join(__dirname, ...distDir)
+    filename: "[name].[hash].js"
   },
   plugins,
   resolve: {
@@ -94,4 +90,4 @@ const webpackProdConfig: Configuration = {
   target: "web"
 };
 
-export default webpackProdConfig;
+export default prodConfig;

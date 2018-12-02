@@ -8,7 +8,7 @@ const app = new Server();
 
 if (process.env.NODE_ENV !== "production") {
   // tslint:disable-next-line
-  // require(path.resolve(__dirname, "..", "..", "secrets.js")); // ! the request of a dependency is an expression...
+  require(path.resolve(__dirname, "..", "..", "secrets.js"));
 }
 
 // passport registration

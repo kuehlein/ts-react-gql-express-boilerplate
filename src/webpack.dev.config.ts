@@ -5,6 +5,7 @@ import { Configuration, HotModuleReplacementPlugin } from "webpack";
 
 // repeated config settings / paths
 const rootDir = [".."];
+const exclude = /node_modules/;
 const include = path.resolve(
   __dirname,
   ...rootDir,
@@ -12,7 +13,6 @@ const include = path.resolve(
   "client",
   "index.tsx"
 );
-const exclude = /node_modules/;
 
 // development plugins
 const plugins = [
@@ -39,7 +39,6 @@ const devConfig: Configuration = {
     rules: [
       {
         exclude,
-        // include,
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
       },
@@ -83,11 +82,10 @@ export default devConfig;
 
 /*
 
-get css working
-dry up webpack in server
 get prod config working
 get watch-server working
 dry up tsconfigs --- consolidate into 1?
+optimize tsforkcheckerplugin
 
  |
  V
