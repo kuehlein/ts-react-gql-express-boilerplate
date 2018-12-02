@@ -28,9 +28,6 @@ export default class Server {
 
   private PORT: number = Number(process.env.PORT) || 3000;
 
-  // Is Hot Module Replacement enabled?
-  private HOT: string = process.env.HOT || "disabled";
-
   constructor() {
     this.appInstance = express();
   }
@@ -39,15 +36,22 @@ export default class Server {
    * Creates an app for development, applies `webpack-dev-middleware`
    * and `webpack-hot-middleware` to enable Hot Module Replacement.
    */
-  public createApp(): void {
-    // This evaluates as true when this file is run directly from the command line,
-    // It will evaluate false when this module is required by another module - (eg. tests)
-    const isDev = require.main === module;
-
+  public createAppDev(): void {
     this.syncDb()
       .then(() => this.applyMiddleware())
       .then(() => this.startListening())
-      .then(() => this.webpackDevMiddleware())
+      .then(() => this.webpackDevMiddleware()) // ! dont use for "watch-server"
+      .then(() => this.staticallyServeFiles())
+      .catch(err => console.log(err));
+  }
+
+  /**
+   * Creates an app for development, applies `webpack-dev-middleware`
+   * and `webpack-hot-middleware` to enable Hot Module Replacement.
+   */
+  public createAppProd(): void {
+    this.syncDb()
+      .then(() => this.applyMiddleware())
       .then(() => this.staticallyServeFiles())
       .catch(err => console.log(err));
   }
@@ -143,7 +147,7 @@ export default class Server {
 
       prettyLogger(
         "log",
-        "Listening on:\n",
+        "Listening on:",
         `  - ${chalk.greenBright(uri)}`,
         "             AND",
         `  - ${chalk.greenBright(uri)}` // ! ${gqlServer.graphqlPath}\n`
@@ -159,21 +163,14 @@ export default class Server {
    */
   private webpackDevMiddleware(): void {
     const compiler: Compiler = webpack(config);
-    // ! vvvv use??? vvvv
+
+    // ! response never being sent...
+
     this.appInstance.use(
       webpackMiddleware(compiler, {
+        // logLevel: "warn",
         publicPath: config.output.publicPath,
-        serverSideRender: true,
-        stats: {
-          colors: true
-        }
-      })
-    );
-    // ! ^^^^ use??? ^^^^
-    this.appInstance.use(
-      webpackMiddleware(compiler, {
-        publicPath: config.output.publicPath,
-        serverSideRender: true,
+        // serverSideRender: true,
         stats: {
           colors: true
         }
@@ -183,7 +180,7 @@ export default class Server {
       webpackHotMiddleware(compiler, {
         heartbeat: 2000,
         log: console.log,
-        path: "__webpack_hmr",
+        path: "", // __webpack_hmr
         reload: true
       })
     );
@@ -192,7 +189,7 @@ export default class Server {
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
-      res.end();
+      // ! res.end();
     });
   }
 
@@ -209,7 +206,7 @@ export default class Server {
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
     this.appInstance
-      .use(express.static(path.join(__dirname, "..", "..", "..")))
+      .use(express.static(path.join(__dirname, "..", "..")))
       .use((req, res, next) =>
         path.extname(req.path).length
           ? next(new Error(`404 - Not found`))
@@ -218,7 +215,7 @@ export default class Server {
 
     // sends index.html
     this.appInstance.use("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "..", "..", "..", "index.html"));
+      res.sendFile(path.join(__dirname, "..", "..", "public", "index.html"));
     });
   }
 }

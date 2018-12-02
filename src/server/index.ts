@@ -24,6 +24,7 @@ if (process.env.NODE_ENV !== "production") {
 //   }
 // );
 
-app.createApp();
+// this evaluates to true when executed from the command line
+require.main === module ? app.createAppDev() : app.createAppProd();
 
 export default app;

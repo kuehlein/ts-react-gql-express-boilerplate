@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { hot } from "react-hot-loader";
 // import { Provider } from "react-redux";
 
 // import "!app!css!./app.css"; // ts-loader stuff // ! ???
@@ -13,7 +14,7 @@ import React, { Component } from "react";
 // You can ignore this warning. For details, see:
 // https://github.com/reactjs/react-router/issues/2182
 
-export default class App extends Component {
+class App extends Component {
   public state: { counter: number };
 
   constructor(props) {
@@ -36,6 +37,8 @@ export default class App extends Component {
     );
   }
 }
+
+export default hot(module)(App);
 
 /*
 
