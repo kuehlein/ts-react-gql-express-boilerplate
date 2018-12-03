@@ -1,6 +1,5 @@
 import bodyParser from "body-parser";
 import chalk from "chalk";
-import { spawn } from "child_process";
 import compression from "compression";
 import express, { Application } from "express";
 // import session from "express-session";
@@ -11,7 +10,7 @@ import webpack, { Compiler } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
-import config from "../config/webpack.dev.config";
+import config from "../webpack.dev.config";
 import db from "./db";
 import { prettyLogger } from "./utils";
 // import gqlServer from "./graphql";
@@ -25,12 +24,21 @@ import { prettyLogger } from "./utils";
  * Instantiated in `server/index`.
  */
 export default class Server {
+  /**
+   * The instance of the express server.
+   */
   public appInstance: Application;
 
+  /**
+   * The port that the application runs on.
+   */
   private PORT: number = Number(process.env.PORT) || 3000;
 
-  // Is Hot Module Replacement enabled?
-  private HOT: string = process.env.HOT || "disabled";
+  /**
+   * If `enabled`, Hot Module Replacement is active.
+   */
+  private HMR: "disabled" | "enabled" =
+    process.env.HMR === "enabled" ? "enabled" : "disabled";
 
   constructor() {
     this.appInstance = express();
@@ -41,33 +49,21 @@ export default class Server {
    * and `webpack-hot-middleware` to enable Hot Module Replacement.
    */
   public createAppDev(): void {
-    if (this.HOT === "enabled") {
-      const syncAndListen: Promise<void> = this.syncDb()
-        .then(() => this.createAppMain())
-        .then(() => this.startListening());
-
-      const buildAndServe: Promise<void> = this.webpack()
-        .then(() => this.webpackDevMiddleware())
-        .then(() => this.staticallyServeFiles());
-
-      Promise.all([syncAndListen, buildAndServe]).catch(err =>
-        console.log(err)
-      );
-    } else {
-      this.syncDb()
-        .then(() => this.createAppMain())
-        .then(() => this.startListening())
-        .then(() => this.staticallyServeFiles())
-        .catch(err => console.log(err));
-    }
+    this.syncDb()
+      .then(() => this.applyMiddleware())
+      .then(() => this.startListening())
+      .then(() => this.HMR === "enabled" && this.webpackDevMiddleware())
+      .then(() => this.staticallyServeFiles())
+      .catch(err => console.log(err));
   }
 
   /**
-   * Creates an optimized production application build.
+   * Creates an app for development, applies `webpack-dev-middleware`
+   * and `webpack-hot-middleware` to enable Hot Module Replacement.
    */
   public createAppProd(): void {
     this.syncDb()
-      .then(() => this.createAppMain())
+      .then(() => this.applyMiddleware())
       .then(() => this.staticallyServeFiles())
       .catch(err => console.log(err));
   }
@@ -85,7 +81,7 @@ export default class Server {
    * (`compression`), as well as session, passport, auth and
    * the graphql api are applied here.
    */
-  private createAppMain(): void {
+  private applyMiddleware(): void {
     // logging middleware
     this.appInstance.use(morgan("dev"));
 
@@ -161,48 +157,13 @@ export default class Server {
     this.appInstance.listen(this.PORT, () => {
       const uri: string = `http://localhost:${this.PORT}`;
 
-      // more discrete log when developing on the backend
-      this.HOT === "enabled"
-        ? prettyLogger(
-            "log",
-            "Listening on:\n",
-            `  - ${chalk.greenBright(uri)}`,
-            "             AND",
-            `  - ${chalk.greenBright(uri)}` // ! ${gqlServer.graphqlPath}\n`
-          )
-        : console.log(
-            chalk.bold.cyan("\nListening on:"),
-            chalk.bold.magentaBright(uri),
-            chalk.bold.cyanBright("and"),
-            chalk.bold.magentaBright(uri + "\n")
-          ); // ! ${gqlServer.graphqlPath}\n`
-    });
-  }
-
-  /**
-   * Spawns a webpack child process using the webpack.dev configuration.
-   * *DEVELOPMENT ONLY*
-   */
-  private async webpack(): Promise<void> {
-    const child = spawn(
-      "npx webpack --config=public/dist/ts-sourcemap/config/webpack.dev.config.js",
-      [],
-      {
-        detached: true,
-        shell: true,
-        stdio: "inherit"
-      }
-    );
-    child.on("exit", (code, signal) => {
-      child.kill();
       prettyLogger(
-        "warn",
-        "  Child process (webpack)",
-        "       exited with:\n",
-        `       - CODE: ${chalk.cyanBright(String(code))}`,
-        `       - SIGNAL: ${chalk.cyanBright(signal)}`
+        "log",
+        "Listening on:",
+        `  - ${chalk.greenBright(uri)}`,
+        "             AND",
+        `  - ${chalk.greenBright(uri)}` // ! ${gqlServer.graphqlPath}\n`
       );
-      console.log(chalk.bold.greenBright("build finished!\n"));
     });
   }
 
@@ -216,8 +177,8 @@ export default class Server {
     const compiler: Compiler = webpack(config);
     this.appInstance.use(
       webpackMiddleware(compiler, {
+        logLevel: "warn",
         publicPath: config.output.publicPath,
-        serverSideRender: true,
         stats: {
           colors: true
         }
@@ -227,7 +188,7 @@ export default class Server {
       webpackHotMiddleware(compiler, {
         heartbeat: 2000,
         log: console.log,
-        path: "__webpack_hmr",
+        path: "",
         reload: true
       })
     );
@@ -236,7 +197,6 @@ export default class Server {
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
       });
-      res.end();
     });
   }
 
@@ -246,24 +206,28 @@ export default class Server {
    * *NOTE* --- The relative paths refer to the locations of the files after being transpiled
    */
   private staticallyServeFiles(): void {
+    // path to root
+    const rootDir = ["..", ".."];
+
     // staticly serve styles
     this.appInstance.use(
-      express.static(path.join(__dirname, "..", "client/", "main.css")) // ! css wont be tsc
+      express.static(
+        path.join(__dirname, ...rootDir, "src", "client", "main.css")
+      )
     );
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
     this.appInstance
-      .use(express.static(path.join(__dirname, "..", "..", "..")))
-      .use(
-        (req, res, next) =>
-          path.extname(req.path).length
-            ? next(new Error(`404 - Not found`))
-            : next()
+      .use(express.static(path.join(__dirname, ...rootDir)))
+      .use((req, res, next) =>
+        path.extname(req.path).length
+          ? next(new Error("404 - Not found"))
+          : next()
       );
 
     // sends index.html
     this.appInstance.use("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "..", "..", "..", "index.html"));
+      res.sendFile(path.join(__dirname, ...rootDir, "public", "index.html"));
     });
   }
 }
