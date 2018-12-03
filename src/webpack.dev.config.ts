@@ -79,17 +79,3 @@ const devConfig: Configuration = {
 };
 
 export default devConfig;
-
-/*
-
-get watch-server working
-dry up tsconfigs --- consolidate into 1?
-optimize tsforkcheckerplugin
-stop watch-server from repeating
-
- |
- V
-
-gql tutorial + implement functionality here
-
-*/
