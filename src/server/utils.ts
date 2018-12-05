@@ -34,3 +34,16 @@ export const prettyLogger = (
   console[status](...styledText);
   console[status](designs[status] + "\n");
 };
+
+/**
+ * Given a `condition`, throw an error if `true` using the given `fail` message, and if
+ * `false` return the optional `success` argument, or `undefined` if no success is provided.
+ */
+export const throwIfError = (
+  condition: boolean,
+  fail: string,
+  success?: any
+): any => {
+  if (condition) throw new Error(fail);
+  return success;
+};

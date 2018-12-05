@@ -2,9 +2,9 @@ import bodyParser from "body-parser";
 import chalk from "chalk";
 import compression from "compression";
 import express, { Application } from "express";
-// import session from "express-session";
+import session from "express-session";
 import morgan from "morgan";
-// import passport from "passport";
+import passport from "passport";
 import path from "path";
 import webpack, { Compiler } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
@@ -12,11 +12,12 @@ import webpackHotMiddleware from "webpack-hot-middleware";
 
 import config from "../webpack.dev.config";
 import db from "./db";
+import gqlServer from "./graphql";
 import { prettyLogger } from "./utils";
-// import gqlServer from "./graphql";
 
-// tslint:disable-next-line
-// const SequelizeStore = require("connect-session-sequelize")(session.Store);
+import SequelizeStore from "connect-session-sequelize";
+const sessionStore = new (SequelizeStore(session.Store))({ db });
+
 // const sessionStore = new SequelizeStore({ db });
 
 /**
@@ -101,35 +102,33 @@ export default class Server {
    * Creates an express session and initialized passport with the session.
    */
   private sessionAndPassport(): void {
-    // TODO: ----------------------------------------------------
     // session middleware with passport
-    // this.appInstance.use(
-    //   session({
-    //     resave: false,
-    //     saveUninitialized: false,
-    //     secret:
-    //       process.env.SESSION_SECRET ||
-    //       "Peeps. Stand up to hard ware and step into style.",
-    //     store: sessionStore
-    //   })
-    // );
-    // this.appInstance.use(passport.initialize());
-    // this.appInstance.use(passport.session());
-    // TODO: ----------------------------------------------------
+    this.appInstance.use(
+      session({
+        resave: false,
+        saveUninitialized: false,
+        secret:
+          process.env.SESSION_SECRET ||
+          "Peeps. Stand up to hard ware and step into style.",
+        store: sessionStore
+      })
+    );
+    this.appInstance.use(passport.initialize());
+    this.appInstance.use(passport.session());
   }
 
   /**
    * Route to user authentication.
    */
   private auth(): void {
-    // TODO: app.use('/auth', require('./auth'));
+    // TODO: this.appInstance.use("/auth", require("./auth"));
   }
 
   /**
    * Route to graphql api.
    */
   private graphql(): void {
-    // TODO: gqlServer.applyMiddleware({ app: this.appInstance });
+    gqlServer.applyMiddleware({ app: this.appInstance });
 
     // handle requests that miss end points above
     this.errorHandlingEndware();
@@ -162,7 +161,7 @@ export default class Server {
         "Listening on:",
         `  - ${chalk.greenBright(uri)}`,
         "             AND",
-        `  - ${chalk.greenBright(uri)}` // ! ${gqlServer.graphqlPath}\n`
+        `  - ${chalk.greenBright(uri)}${gqlServer.graphqlPath}\n`
       );
     });
   }
