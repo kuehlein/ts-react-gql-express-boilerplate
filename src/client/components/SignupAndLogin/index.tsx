@@ -42,20 +42,14 @@ export default class SignupAndLogin extends Component<
   }
 
   public mapInputs(): JSX.Element[] {
-    const allFields = [];
-    for (const key in this.state) {
-      if (this.state.hasOwnProperty) {
-        allFields.push(
-          <FormInput
-            content={this.state[key]}
-            handleChange={this.handleChange}
-            key={key}
-            placeholder={key as keyof ISignupState | keyof ILoginState}
-          />
-        );
-      }
-    }
-    return allFields;
+    return Object.keys(this.state).map(key => (
+      <FormInput
+        content={this.state[key]}
+        handleChange={this.handleChange}
+        key={key}
+        placeholder={key as keyof ISignupState | keyof ILoginState}
+      />
+    ));
   }
 
   public render() {
