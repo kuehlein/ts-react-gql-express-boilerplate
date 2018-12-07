@@ -1,11 +1,15 @@
+import _ from "lodash";
 import React, { SFC } from "react";
 
-import { ISignupAndLoginState, IUpdateStateArg } from "./";
+import { ILoginState, ISignupState } from "./";
 
 interface IFormInputProps {
   content: string;
-  handleChange: ({ key, value }: IUpdateStateArg) => void;
-  placeholder: keyof ISignupAndLoginState;
+  handleChange: (
+    placeholder: keyof ILoginState | keyof ISignupState,
+    value: string
+  ) => void;
+  placeholder: keyof ILoginState | keyof ISignupState;
 }
 
 const FormInput: SFC<IFormInputProps> = ({
@@ -14,12 +18,14 @@ const FormInput: SFC<IFormInputProps> = ({
   placeholder
 }) => (
   <>
-    <label htmlFor="input">{placeholder}</label> {/* to uppercase? */}
-    <input
-      onChange={e => handleChange({ key: placeholder, value: e.target.value })}
-      placeholder={placeholder}
-      value={content}
-    />
+    <label htmlFor="input">
+      {_.capitalize(placeholder)}
+      <input
+        onChange={e => handleChange(placeholder, e.target.value)}
+        placeholder={placeholder}
+        value={content}
+      />
+    </label>
     <hr />
   </>
 );

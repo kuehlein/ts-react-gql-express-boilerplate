@@ -6,72 +6,74 @@ interface ISignupAndLoginProps {
   formType: "signup" | "login";
 }
 
-export interface ISignupAndLoginState {
+export interface ISignupState {
   email: string;
   password: string;
 }
 
-export interface IUpdateStateArg {
-  key: keyof ISignupAndLoginState;
-  value: string;
+export interface ILoginState {
+  email: string;
+  password: string;
 }
 
 export default class SignupAndLogin extends Component<
   ISignupAndLoginProps,
-  ISignupAndLoginState
+  ISignupState | ILoginState
 > {
   public static defaultProps = {
     formType: "signup"
   };
 
-  private static signupFields: Array<keyof ISignupAndLoginState> = [
-    "email",
-    "password"
-  ];
+  private signupState: ISignupState = {
+    email: "",
+    password: ""
+  };
 
-  private static loginFields: Array<keyof ISignupAndLoginState> = [
-    "email",
-    "password"
-  ];
+  private loginState: ILoginState = {
+    email: "",
+    password: ""
+  };
 
   constructor(props) {
     super(props);
-    this.state = {
-      email: "",
-      password: ""
-    };
+    this.state =
+      this.props.formType === "signup" ? this.signupState : this.loginState;
     this.handleChange = this.handleChange.bind(this);
   }
 
-  public mapInputs(formType: ISignupAndLoginProps["formType"]): JSX.Element[] {
-    const { signupFields, loginFields } = SignupAndLogin;
-    const fields = formType === "signup" ? signupFields : loginFields;
-
-    return fields.map((input, i) => (
-      <FormInput
-        content={this.state[input]}
-        handleChange={this.handleChange}
-        key={i}
-        placeholder={input}
-      />
-    ));
+  public mapInputs(): JSX.Element[] {
+    const allFields = [];
+    for (const key in this.state) {
+      if (this.state.hasOwnProperty) {
+        allFields.push(
+          <FormInput
+            content={this.state[key]}
+            handleChange={this.handleChange}
+            key={key}
+            placeholder={key as keyof ISignupState | keyof ILoginState}
+          />
+        );
+      }
+    }
+    return allFields;
   }
 
   public render() {
-    const { formType } = this.props;
     return (
       <form>
-        <label>{formType}</label>
+        <label>{this.props.formType}</label>
         <hr />
-        {this.mapInputs(formType)}
+        {this.mapInputs()}
       </form>
     );
   }
 
-  private handleChange({ key, value }: IUpdateStateArg): void {
-    this.setState({ [key]: value } as Pick<
-      ISignupAndLoginState,
-      keyof ISignupAndLoginState
-    >);
+  private handleChange(
+    placeholder: keyof ISignupState | keyof ILoginState,
+    value: string
+  ): void {
+    this.setState({ [placeholder]: value } as
+      | Pick<ISignupState, keyof ISignupState>
+      | Pick<ILoginState, keyof ILoginState>);
   }
 }
