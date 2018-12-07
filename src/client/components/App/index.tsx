@@ -7,6 +7,8 @@ import "./app.css";
 // import Routes from './routes'
 // import store from "../store";
 
+import { SignupAndLogin } from "../";
+
 // If you use React Router, make this component
 // render <Router> with your routes. Currently,
 // only synchronous routes are hot reloaded, and
@@ -14,39 +16,30 @@ import "./app.css";
 // You can ignore this warning. For details, see:
 // https://github.com/reactjs/react-router/issues/2182
 
-class App extends Component {
-  public state: { counter: number };
+interface IState {
+  isSignup: boolean;
+}
 
+class App extends Component<{}, IState> {
   constructor(props) {
     super(props);
     this.state = {
-      counter: 0
+      isSignup: true
     };
   }
 
   public render() {
     return (
-      <div style={{ background: "orange" }}>
-        <h3>current count: {this.state.counter}</h3>
+      <>
+        <SignupAndLogin formType={this.state.isSignup ? "signup" : "login"} />
         <button
-          className="red"
-          onClick={() => this.setState({ counter: this.state.counter + 1 })}
+          onClick={() => this.setState({ isSignup: !this.state.isSignup })}
         >
-          +1
+          {this.state.isSignup ? "Login" : "Signup"}
         </button>
-      </div>
+      </>
     );
   }
 }
 
 export default hot(module)(App);
-
-/*
-
-interface IMyProps {
-  name: string
-  age: number
-}
-const App: SFC<IMyProps> = () => {}
-
-*/
