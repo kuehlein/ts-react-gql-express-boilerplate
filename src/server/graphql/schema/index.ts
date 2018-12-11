@@ -1,12 +1,14 @@
-// import { GraphQLSchema } from "graphql";
+import { DocumentNode } from "graphql";
 
-import { Signup } from "./mutations";
-import { RootQuery } from "./types";
+import { Login, Logout, Signup } from "./mutations";
+import { RootQuery, User } from "./types";
 
-// * unify mutations and types here
-// * export that to graphql/index to be used in `new ApolloServer()`
-
-// export default new GraphQLSchema({
-//   mutation: Signup,
-//   query: RootQuery
-// });
+export const typeDefs: DocumentNode = Object.assign(
+  {},
+  Login,
+  Logout,
+  Signup,
+  RootQuery,
+  User
+);
+export { default as resolvers } from "./resolvers";

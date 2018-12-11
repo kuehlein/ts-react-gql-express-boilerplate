@@ -7,8 +7,12 @@ interface ISignupAndLoginProps {
 }
 
 export interface ISignupState {
+  birthday: string;
   email: string;
+  firstName: string;
+  lastName: string;
   password: string;
+  phoneNumber: string;
 }
 
 export interface ILoginState {
@@ -25,8 +29,12 @@ export default class SignupAndLogin extends Component<
   };
 
   private signupState: ISignupState = {
+    birthday: "",
     email: "",
-    password: ""
+    firstName: "",
+    lastName: "",
+    password: "",
+    phoneNumber: ""
   };
 
   private loginState: ILoginState = {
@@ -42,6 +50,7 @@ export default class SignupAndLogin extends Component<
   }
 
   public mapInputs(): JSX.Element[] {
+    // ! the order will be inconsistent... use an array?
     return Object.keys(this.state).map(key => (
       <FormInput
         content={this.state[key]}

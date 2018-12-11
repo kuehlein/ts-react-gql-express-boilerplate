@@ -1,24 +1,20 @@
 import bodyParser from "body-parser";
 import chalk from "chalk";
 import compression from "compression";
+import SessionStore from "connect-pg-simple";
 import express, { Application } from "express";
 import session from "express-session";
 import morgan from "morgan";
 import passport from "passport";
 import path from "path";
+import { getConnection } from "typeorm";
 import webpack, { Compiler } from "webpack";
 import webpackMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
 import config from "../webpack.dev.config";
-import db from "./db";
 import gqlServer from "./graphql";
 import { prettyLogger } from "./utils";
-
-import SequelizeStore from "connect-session-sequelize";
-const sessionStore = new (SequelizeStore(session.Store))({ db });
-
-// const sessionStore = new SequelizeStore({ db });
 
 /**
  * Contains the logic for running the server in both development and production.
@@ -36,7 +32,7 @@ export default class Server {
   private PORT: number = Number(process.env.PORT) || 3000;
 
   /**
-   * If `enabled`, Hot Module Replacement is active.
+   * If `enabled`, Hot Module Replacement is active. Enable *FOR DEVELOPMENT ONLY*
    */
   private HMR: "disabled" | "enabled" =
     process.env.HMR === "enabled" ? "enabled" : "disabled";
@@ -73,7 +69,8 @@ export default class Server {
    * Syncs the database to begin the creation of the server.
    */
   private async syncDb(): Promise<void> {
-    await db.sync();
+    // create db connection
+    await getConnection();
   }
 
   /**
@@ -110,7 +107,7 @@ export default class Server {
         secret:
           process.env.SESSION_SECRET ||
           "Peeps. Stand up to hard ware and step into style.",
-        store: sessionStore
+        store: new (SessionStore(session))()
       })
     );
     this.appInstance.use(passport.initialize());
@@ -122,6 +119,7 @@ export default class Server {
    */
   private auth(): void {
     // TODO: this.appInstance.use("/auth", require("./auth"));
+    // ! this route might be obsolete with graphql
   }
 
   /**

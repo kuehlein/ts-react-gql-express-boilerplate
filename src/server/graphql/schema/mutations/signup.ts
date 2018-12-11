@@ -1,26 +1,10 @@
 import { gql } from "apollo-server-express";
 
-const Signup = gql`
+export default gql`
   type Mutation {
-    signup(email: String!, password: String!): User!
+    signup(user: User, req: String): User!
   }
 `;
 
-export default Signup;
-
-// import { GraphQLObjectType, GraphQLString } from "graphql";
-
-// const Signup = new GraphQLObjectType({
-//   fields: {
-//     signup: {
-//       args: {
-//         email: { type: GraphQLString },
-//         password: { type: GraphQLString }
-//       },
-//       resolve: (parentValue, { email, password }, req) =>
-//         signup({ email, password, req }),
-//       type: User
-//     }
-//   },
-//   name: "Signup"
-// });
+// ! how do i establish `req` as type `Express.Request`?
+// ! and `user` of type `User`?
