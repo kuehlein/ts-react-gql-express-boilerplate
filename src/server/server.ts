@@ -166,8 +166,8 @@ export default class Server {
         "log",
         "Listening on:",
         `  - ${chalk.greenBright(uri)}`,
-        "             AND"
-        // `  - ${chalk.greenBright(uri)}${gqlServer.graphqlPath}\n`
+        "             AND",
+        `  - ${chalk.greenBright(uri)}${gqlServer.graphqlPath}`
       );
     });
   }

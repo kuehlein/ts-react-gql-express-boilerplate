@@ -4,16 +4,32 @@ import { DocumentNode } from "graphql";
 
 export const typeDef: DocumentNode = gql`
   type Query {
-    # root:
     user: User!
-    # users: [User!]!
+    users: [User!]!
   }
 `;
 
 // Provide resolver functions for your schema fields
 export const resolver: IResolvers = {
   Query: {
-    user: () => ({ id: "1", email: "hi@gmail.com" })
+    user: (parent, args, context, info) => {
+      const onlyUser = {
+        createdAt: "???",
+        email: "hi@gmail.com",
+        firstName: "Sool",
+        id: "1",
+        lastName: "lol"
+      };
+
+      console.log(
+        "context---------",
+        JSON.stringify(context, null, 2),
+        "\n info------",
+        info
+      );
+
+      return onlyUser;
+    }
     //   users: () => [
     //     { id: "1", email: "hi@gmail.com" },
     //     { id: "2", email: "world@gmail.com" }

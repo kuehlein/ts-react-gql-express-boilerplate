@@ -9,7 +9,7 @@ export const prettyLogger = (
   status: "log" | "warn" | "error",
   ...text: string[]
 ): void => {
-  const indent: string = "              ";
+  const indent: string = "             ";
   const designs: {} = {
     error: chalk.reset.redBright(
       "\n#########################################################"

@@ -10,6 +10,11 @@ export const typeDefs: DocumentNode[] = [RootQueryType, UserTypeDef];
 
 // resolvers
 import { resolver as RootQueryResolver } from "./rootQuery";
+import { Date } from "./scalars";
 import { resolver as UserResolver } from "./user";
 
-export const resolvers: IResolvers = _.merge(RootQueryResolver, UserResolver);
+export const resolvers: IResolvers = _.merge(
+  Date,
+  RootQueryResolver,
+  UserResolver
+);
