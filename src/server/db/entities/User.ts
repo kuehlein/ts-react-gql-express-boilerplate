@@ -35,18 +35,29 @@ export default class User extends BaseEntity {
       .digest("hex");
   }
 
-  @PrimaryGeneratedColumn("uuid")
-  public id: string;
-
+  @IsDate()
   @Column({ nullable: false })
-  public firstName: string;
+  public birthday: Date;
 
-  @Column({ nullable: false })
-  public lastName: string;
+  @IsDate()
+  @CreateDateColumn({ default: () => "NOW()", nullable: false })
+  public createdAt: Date;
 
   @IsEmail()
   @Column({ nullable: false, unique: true })
   public email: string;
+
+  @Column({ nullable: false })
+  public firstName: string;
+
+  @Column({ unique: true })
+  public googleId: string;
+
+  @PrimaryGeneratedColumn("uuid")
+  public id: string;
+
+  @Column({ nullable: false })
+  public lastName: string;
 
   @IsPhoneNumber("ZZ") // * "ZZ" for null, prompt user for their region
   @Column()
@@ -57,17 +68,6 @@ export default class User extends BaseEntity {
 
   @Column({ nullable: false })
   public salt: string;
-
-  @IsDate()
-  @Column({ nullable: false })
-  public birthday: Date;
-
-  @Column({ unique: true })
-  public googleId: string;
-
-  @IsDate()
-  @CreateDateColumn({ default: () => "NOW()", nullable: false })
-  public createdAt: Date;
 
   /**
    * Virtual field for comparing changes in `password`.

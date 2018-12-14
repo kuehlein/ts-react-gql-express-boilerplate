@@ -97,8 +97,8 @@ passport.deserializeUser(async (id: User["id"], done) => {
  * or no email or password is provided, an error will be thrown.
  */
 export const signup = async (
-  user: User,
-  req: Express.Request
+  user: User
+  // req: Express.Request // ! changing gql resolvers.... need to come back here
 ): Promise<void> => {
   if (!user.email || !user.password) {
     throw new Error("You must provide an email and password.");
@@ -109,9 +109,9 @@ export const signup = async (
     .then(existingUser =>
       throwIfError(!!existingUser, "Email in use", newUser.save())
     )
-    .then(async savedUser =>
-      req.logIn(savedUser, err => throwIfError(err, err, savedUser))
-    )
+    // .then(async savedUser =>
+    // req.logIn(savedUser, err => throwIfError(err, err, savedUser)) // ! removed `req` from resolvers
+    // )
     .catch(err => console.log(err));
 };
 
@@ -120,9 +120,14 @@ export const signup = async (
 // function returns a function, as its indended to be used as a middleware with
 // Express.  We have another compatibility layer here to make it work nicely with
 // GraphQL, as GraphQL always expects to see a promise for handling async code.
-export const login = async ({ email, password, req }) =>
+
+/**
+ * Logs in an existing user. For a compatability layer between Graphql and Express,
+ * we use `passport.authenticate`
+ */
+export const login = async (email: User["email"], password: User["password"]) =>
   // ! might need to be reworked...
   await passport.authenticate("local", (err, user) => {
     if (!user) throw new Error("Invalid Credentials");
-    req.login(user, () => user)({ body: { email, password } });
+    // req.login(user, () => user)({ body: { email, password } }); // ! removed `req`
   });

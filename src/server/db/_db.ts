@@ -6,7 +6,7 @@ const db = createConnection({
     // migrationsDir: "ts-sourcemap/server/db/migrations",
     // subscribersDir: "ts-sourcemap/server/db/subscribers"
   },
-  database: "ts-react-gql-express-boilerplate",
+  database: "ts_react_gql_express_boilerplate",
   entities: ["ts-sourcemap/server/db/entities/"], // "*.js"
   // entitySchemas: ["ts-sourcemap/server/db/schemas/*.json"],
   host: "localhost",
@@ -17,7 +17,7 @@ const db = createConnection({
   // subscribers: ["ts-sourcemap/server/db/subscribers/*.js"],
   synchronize: process.env.NODE_ENV === "development",
   type: "postgres",
-  username: "anon"
+  username: "kyleuehlein" // ! -----
 });
 
 export default db;

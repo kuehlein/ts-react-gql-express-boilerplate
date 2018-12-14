@@ -1,14 +1,15 @@
+import { IResolvers } from "apollo-server-express";
 import { DocumentNode } from "graphql";
+import _ from "lodash";
 
-import { Login, Logout, Signup } from "./mutations";
-import { RootQuery, User } from "./types";
+// typeDefs
+import { typeDef as RootQueryType } from "./rootQuery";
+import { typeDef as UserTypeDef } from "./user";
 
-export const typeDefs: DocumentNode = Object.assign(
-  {},
-  Login,
-  Logout,
-  Signup,
-  RootQuery,
-  User
-);
-export { default as resolvers } from "./resolvers";
+export const typeDefs: DocumentNode[] = [RootQueryType, UserTypeDef];
+
+// resolvers
+import { resolver as RootQueryResolver } from "./rootQuery";
+import { resolver as UserResolver } from "./user";
+
+export const resolvers: IResolvers = _.merge(RootQueryResolver, UserResolver);
