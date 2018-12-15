@@ -7,12 +7,14 @@ interface ISignupAndLoginProps {
 }
 
 export interface ISignupState {
+  avatar: string;
   birthday: string;
   email: string;
   firstName: string;
   lastName: string;
   password: string;
   phoneNumber: string;
+  username: string;
 }
 
 export interface ILoginState {
@@ -29,12 +31,14 @@ export default class SignupAndLogin extends Component<
   };
 
   private signupState: ISignupState = {
+    avatar: "",
     birthday: "",
     email: "",
     firstName: "",
     lastName: "",
     password: "",
-    phoneNumber: ""
+    phoneNumber: "",
+    username: ""
   };
 
   private loginState: ILoginState = {

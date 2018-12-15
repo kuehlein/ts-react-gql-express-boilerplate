@@ -19,6 +19,7 @@
   },
   "scripts": {
     "postinstall": "touch secrets.js",
+    "seed": "tsc && node ts-sourcemap/scripts/seed.js",
     "watch-server": "NODE_ENV=development HMR=disabled npx tsc-watch --onSuccess \"nodemon ts-sourcemap/server/index.js\" --onFailure \"echo \u001b[31;1mERROR: Compilation Failed ---\u001b[33;1m Fix errors to restart server.\u001b[0m\"",
     "hot": "tsc && NODE_ENV=development HMR=enabled node ts-sourcemap/server/index.js",
     "prod": "tsc && NODE_ENV=production npx webpack --config=ts-sourcemap/webpack.prod.config.js",
@@ -30,6 +31,7 @@
     "@types/connect-pg-simple": "^4.2.0",
     "@types/express": "^4.16.0",
     "@types/express-session": "^1.15.11",
+    "@types/faker": "^4.1.4",
     "@types/graphql": "^14.0.3",
     "@types/html-webpack-plugin": "^3.2.0",
     "@types/lodash": "^4.14.119",
@@ -43,6 +45,7 @@
     "@types/webpack-hot-middleware": "^2.16.4",
     "@types/webpack-node-externals": "^1.6.3",
     "css-loader": "^1.0.1",
+    "faker": "^4.1.0",
     "fork-ts-checker-webpack-plugin": "^0.4.12",
     "html-webpack-plugin": "^3.2.0",
     "react-hot-loader": "^4.3.12",

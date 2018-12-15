@@ -103,11 +103,10 @@ export const signup = async (
   if (!user.email || !user.password) {
     throw new Error("You must provide an email and password.");
   }
-  const newUser = Object.assign(new User(), user);
 
   return await User.findOne({ email: user.email })
     .then(existingUser =>
-      throwIfError(!!existingUser, "Email in use", newUser.save())
+      throwIfError(!!existingUser, "Email in use", User.create(user))
     )
     // .then(async savedUser =>
     // req.logIn(savedUser, err => throwIfError(err, err, savedUser)) // ! removed `req` from resolvers

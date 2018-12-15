@@ -20,5 +20,5 @@
     "target": "es2015"
   },
   "exclude": ["./node_modules", "**/*.spec.ts"],
-  "files": ["./src/server/index.ts"]
+  "files": ["./src/server/index.ts", "./src/scripts/seed.ts"]
 }

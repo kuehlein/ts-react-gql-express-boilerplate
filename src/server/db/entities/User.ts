@@ -1,5 +1,14 @@
-import { IsDate, IsEmail, IsPhoneNumber } from "class-validator";
+import {
+  IsDate,
+  IsEmail,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsUrl,
+  IsUUID,
+  Length
+} from "class-validator";
 import crypto from "crypto";
+import path from "path";
 import {
   AfterLoad,
   BaseEntity,
@@ -8,8 +17,20 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn
 } from "typeorm";
+
+const defaultAvatar = path.resolve(
+  "..",
+  "..",
+  "..",
+  "..",
+  "public",
+  "assets",
+  "default-avatar.jpg"
+);
+import { Address } from "./";
 
 /**
  * User model. Contains fields for name, email, phone, password and other user related information,
@@ -35,6 +56,11 @@ export default class User extends BaseEntity {
       .digest("hex");
   }
 
+  // ! upload to the interwebz client side...
+  @IsUrl()
+  @Column({ default: defaultAvatar })
+  public avatar: string;
+
   @IsDate()
   @Column({ nullable: false })
   public birthday: Date;
@@ -47,27 +73,47 @@ export default class User extends BaseEntity {
   @Column({ nullable: false, unique: true })
   public email: string;
 
+  @IsNotEmpty()
   @Column({ nullable: false })
   public firstName: string;
 
+  @IsUUID()
+  @IsNotEmpty()
   @Column({ unique: true })
-  public googleId: string;
+  public googleId?: string;
 
   @PrimaryGeneratedColumn("uuid")
   public id: string;
 
+  @IsNotEmpty()
   @Column({ nullable: false })
   public lastName: string;
 
-  @IsPhoneNumber("ZZ") // * "ZZ" for null, prompt user for their region
+  @IsPhoneNumber("ZZ") // * "ZZ" for null --- prompt user for their region
   @Column()
-  public phoneNumber: string;
+  public phoneNumber?: string;
 
+  @IsNotEmpty()
   @Column({ nullable: false })
   public password: string;
 
   @Column({ nullable: false })
   public salt: string;
+
+  @IsUUID()
+  @Column()
+  public stripeId?: string;
+
+  @Length(4) // ! minimum length is 4 characters
+  @IsNotEmpty()
+  @Column()
+  public username: string;
+
+  /**
+   * One user can have many addresses.
+   */
+  @OneToMany(type => Address, address => address.user)
+  public addresses?: Address[];
 
   /**
    * Virtual field for comparing changes in `password`.

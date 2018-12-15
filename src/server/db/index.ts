@@ -1,7 +1,7 @@
 import db from "./_db";
 
 // register entities (models)
-import "./entities/User";
+import "./entities";
 
 export default db;
-export { default as User } from "./entities/User";
+export * from "./entities";
