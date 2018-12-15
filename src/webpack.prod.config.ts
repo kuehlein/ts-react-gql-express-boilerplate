@@ -62,6 +62,7 @@ const prodConfig: Configuration = {
           configFile: path.resolve(
             __dirname,
             ...rootDir,
+            "configs",
             "tsconfig.client.json"
           ),
           happyPackMode: true,

@@ -3,7 +3,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,
-    "baseUrl": ".",
+    "baseUrl": "..",
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -12,13 +12,13 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "outDir": "ts-sourcemap/",
+    "outDir": "../ts-sourcemap/",
     "preserveConstEnums": true,
     "pretty": true,
     "removeComments": true,
     "sourceMap": true,
     "target": "es2015"
   },
-  "exclude": ["./node_modules", "**/*.spec.ts"],
-  "files": ["./src/server/index.ts", "./src/scripts/seed.ts"]
+  "exclude": ["../node_modules", "**/*.spec.ts"],
+  "files": ["../src/server/index.ts"]
 }

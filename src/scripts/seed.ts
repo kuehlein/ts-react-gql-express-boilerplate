@@ -1,18 +1,20 @@
 // tslint:disable:no-console
 
 import { address, date, internet, name, phone, random } from "faker";
-import { Connection } from "typeorm";
+import { Connection, getConnection } from "typeorm";
 
-import { Address, User } from "../server/db";
+import db, { Address, User } from "../server/db";
 
-let db: Connection;
+let dbConnection: Connection;
 
 const seed = async (): Promise<void> => {
-  db = await require("../server/db");
+  dbConnection = await getConnection(); // require("../server/db");
   console.log("db synced!");
 
+  console.log("DB______________________\n", dbConnection); // JSON.stringify(db, null, 2));
+
   // constant user
-  const user = await User.create({
+  const user: User = await User.create({
     birthday: "1990-05-20",
     email: "jerry@fuzzduck.org",
     firstName: "Jerry",
@@ -34,7 +36,7 @@ const seed = async (): Promise<void> => {
     zipCode: "092050"
   });
 
-  const users = await Promise.all([createUsers(150)]);
+  const users: void[] = await Promise.all([createUsers(150)]);
 
   console.log(`seeded ${users.length} users`);
   console.log(`seeded successfully`);
@@ -52,7 +54,7 @@ const runSeed = async (): Promise<void> => {
     process.exitCode = 1;
   } finally {
     console.log("closing db connection");
-    await db.close();
+    await dbConnection.close(); // ! ---------------------- not a function
     console.log("db connection closed");
   }
 };

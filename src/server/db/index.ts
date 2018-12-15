@@ -1,4 +1,4 @@
-import db from "./_db";
+import { default as db } from "./_db";
 
 // register entities (models)
 import "./entities";

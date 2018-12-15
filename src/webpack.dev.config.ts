@@ -24,7 +24,12 @@ const plugins = [
   }),
   new ForkTsCheckerWebpackPlugin({
     checkSyntacticErrors: true,
-    tsconfig: path.resolve(__dirname, ...rootDir, "tsconfig.client.json"), // only checks client
+    tsconfig: path.resolve(
+      __dirname,
+      ...rootDir,
+      "configs",
+      "tsconfig.client.json"
+    ), // only checks client
     watch: path.resolve(__dirname, ...rootDir, "src", "client", "index.tsx")
   }),
   new FilterWarningsPlugin({
@@ -64,6 +69,7 @@ const devConfig: Configuration = {
           configFile: path.resolve(
             __dirname,
             ...rootDir,
+            "configs",
             "tsconfig.client.json"
           ),
           happyPackMode: true,
