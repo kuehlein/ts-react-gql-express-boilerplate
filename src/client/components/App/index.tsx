@@ -1,6 +1,6 @@
 import { InMemoryCache } from "apollo-cache-inmemory";
 import ApolloClient from "apollo-client";
-import { ApolloLink } from "apollo-link"; // ! not really sure what is going on here
+// import { ApolloLink } from "apollo-link"; // ! not really sure what is going on here
 import { HttpLink } from "apollo-link-http";
 import React, { Component } from "react";
 import { ApolloProvider } from "react-apollo";
@@ -37,10 +37,14 @@ class App extends Component<{}, IState> {
    */
   private gqlClient = new ApolloClient({
     cache: new InMemoryCache({ dataIdFromObject: object => object.id || null }),
-    link: new HttpLink({ uri: "" }) // new ApolloLink() // ! not sure about this
+    link: new HttpLink({
+      includeExtensions: true,
+      useGETForQueries: true // ! ???
+    })
   });
 
-  constructor(props) {
+  constructor(props: {}) {
+    // ! undefined?
     super(props);
     this.state = {
       isSignup: true
