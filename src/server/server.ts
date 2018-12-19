@@ -7,6 +7,7 @@ import session from "express-session";
 import morgan from "morgan";
 import passport from "passport";
 import path from "path";
+import { getConnection } from "typeorm";
 import webpack, { Compiler } from "webpack";
 import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
@@ -69,8 +70,8 @@ export default class Server {
    */
   private async syncDb(): Promise<void> {
     // create db connection
-    await require("./db"); // ! find a better way to do this...
-    // ? await getConnection();
+    const db = getConnection();
+    if (db.isConnected == false) await db.connect();
   }
 
   /**

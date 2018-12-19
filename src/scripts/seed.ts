@@ -3,102 +3,129 @@
 import { address, date, internet, name, phone, random } from "faker";
 import { Connection, getConnection } from "typeorm";
 
-import db, { Address, User } from "../server/db";
+import { Address, User } from "../server/db";
+import { prettyLogger } from "../server/utils";
+import { default as doggie } from "./doggie";
 
-let dbConnection: Connection;
+/**
+ * Seeds the database with `process.env.SEED_NUM` random users and addresses.
+ */
+const seed = async (): Promise<Connection> => {
+  const db = getConnection();
+  if (db.isConnected == false) await db.connect();
 
-const seed = async (): Promise<void> => {
-  dbConnection = await getConnection(); // require("../server/db");
-  console.log("db synced!");
+  const seedUsers: Promise<User>[] = [];
+  const seedAddresses: Promise<Address>[] = [];
 
-  console.log("DB______________________\n", dbConnection); // JSON.stringify(db, null, 2));
+  await createUsers(db, Number(process.env.SEED_NUM), seedUsers, seedAddresses);
 
-  // constant user
-  const user: User = await User.create({
-    birthday: "1990-05-20",
-    email: "jerry@fuzzduck.org",
-    firstName: "Jerry",
-    googleId: "7dfa2b86-b1ef-4ea2-bc48-4eb9dac60f69",
-    lastName: "Muzsik",
-    password: "password",
-    phoneNumber: "5558675309",
-    stripeId: "2e0a4505-83b7-475d-b9bb-a5a8bf0ff141",
-    username: "jman11"
-  });
-  await Address.create({
-    city: "Montanita",
-    country: "Ecuador",
-    googlePlaceId: "ca1990eb-5fec-4210-aaab-8a26e8a1ab49",
-    state: "Santa-Elena",
-    streetAddress: "420",
-    streetName: "Main Street",
-    user,
-    zipCode: "092050"
-  });
+  await Promise.all(seedUsers);
+  await Promise.all(seedAddresses);
 
-  const users: void[] = await Promise.all([createUsers(150)]);
+  prettyLogger("log", ...doggie(`Seeded ${process.env.SEED_NUM} users!`));
 
-  console.log(`seeded ${users.length} users`);
-  console.log(`seeded successfully`);
+  return db;
 };
 
-// We've separated the `seed` function from the `runSeed` function.
-// This way we can isolate the error handling and exit trapping.
-// The `seed` function is concerned only with modifying the database.
+/**
+ * Creates `num` of new `user`s with associated `address`es (by invoking `createAddresses`).
+ */
+const createUsers = async (
+  db: Connection,
+  num: number,
+  seedUsers: Promise<User>[],
+  seedAddresses: Promise<Address>[]
+): Promise<void> => {
+  for (let i = num; i > 0; i--) {
+    const newUser = buildUser(i);
+    const createdUser = db.getRepository(User).save(newUser);
+
+    seedUsers.push(createdUser);
+    createdUser.then(() => createAddresses(db, newUser, i % 3, seedAddresses));
+  }
+};
+
+/**
+ * Build a `user` using fake data.
+ */
+const buildUser = (i: number): User => {
+  const newUser = new User();
+  newUser.avatar = internet.avatar();
+  newUser.birthday = date.past(1920);
+  newUser.email =
+    newUser.firstName +
+    random.uuid().split("-")[0] +
+    "@" +
+    internet.domainName();
+  newUser.firstName = name.firstName();
+  newUser.googleId = i % 4 === 0 ? random.uuid() : null;
+  newUser.lastName = name.lastName();
+  newUser.password = internet.password();
+  newUser.phoneNumber = i % 3 === 0 ? phone.phoneNumber() : null;
+  newUser.stripeId = i % 5 === 0 ? random.uuid() : null;
+  newUser.username = internet.userName();
+
+  return newUser;
+};
+
+/**
+ * Given a `user`, creates a `num` of associated `address`es.
+ */
+const createAddresses = async (
+  db: Connection,
+  user: User,
+  num: number,
+  seedAddresses: Promise<Address>[]
+): Promise<void> => {
+  for (let i = num; i > 0; i--) {
+    const newAddress = buildAddress(user, i);
+
+    seedAddresses.push(db.getRepository(Address).save(newAddress));
+  }
+};
+
+/**
+ * Build a fake `address` associated to a given `user`.
+ */
+const buildAddress = (user: User, i: number): Address => {
+  const newAddress = new Address();
+  newAddress.city = address.city();
+  newAddress.country = address.country();
+  newAddress.googlePlaceId = random.uuid();
+  newAddress.secondaryAddress =
+    i % 2 === 0 ? address.secondaryAddress() : undefined;
+  newAddress.state = address.state();
+  newAddress.streetAddress = address.streetAddress();
+  newAddress.streetName = address.streetName();
+  newAddress.user = user;
+  newAddress.zipCode = address.zipCode();
+
+  return newAddress;
+};
+
+/**
+ * Invokes the `seed` function, handles errors and logs output.
+ */
 const runSeed = async (): Promise<void> => {
+  let db: Connection;
+
   console.log("seeding...");
+
   try {
-    await seed();
+    db = await seed();
+    console.log("Closing db connection...");
+    await db.close();
+    console.log("Db connection closed.");
   } catch (err) {
-    console.error(err);
+    prettyLogger("error", "\n" + JSON.stringify(err, null, 2));
     process.exitCode = 1;
-  } finally {
-    console.log("closing db connection");
-    await dbConnection.close(); // ! ---------------------- not a function
-    console.log("db connection closed");
   }
 };
 
-const createUsers = async (num: number): Promise<void> => {
-  for (let i = num; i > 0; i--) {
-    const user = await User.create({
-      avatar: internet.avatar(),
-      birthday: date.past(1920),
-      email: internet.email(),
-      firstName: name.firstName(),
-      googleId: i % 4 === 0 ? random.uuid() : null,
-      lastName: name.lastName(),
-      password: internet.password(),
-      phoneNumber: i % 3 === 0 ? phone.phoneNumber() : null,
-      stripeId: i % 5 === 0 ? random.uuid() : null,
-      username: internet.userName()
-    });
-    await createAddresses(user, i % 3);
-  }
-};
-
-const createAddresses = async (user: User, num: number): Promise<void> => {
-  for (let i = num; i > 0; i--) {
-    await Address.create({
-      city: address.city(),
-      country: address.country(),
-      googlePlaceId: random.uuid(),
-      secondaryAddress: i % 2 === 0 ? address.secondaryAddress() : undefined,
-      state: address.state(),
-      streetAddress: address.streetAddress(),
-      streetName: address.streetName(),
-      user,
-      zipCode: address.zipCode()
-    });
-  }
-};
-
-// Execute the `seed` function, IF we ran this module directly (`node seed`).
-// `Async` functions always return a promise, so we can use `catch` to handle
-// any errors that might occur inside of `seed`.
+// Execute the `seed` function if we ran from the terminal (`npm run seed`).
 if (module === require.main) {
   runSeed();
 }
 
-// we export the seed function for testing purposes (see `./seed.spec.js`)
+// export for testing purposes (see `./seed.spec.ts`)
 export default seed;

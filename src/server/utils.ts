@@ -26,6 +26,7 @@ export const prettyLogger = (
     log: "cyanBright",
     warn: "yellow"
   };
+
   const styledText: string[] = text.map(sentence =>
     chalk.bold[colors[status]]("\n" + indent + sentence)
   );

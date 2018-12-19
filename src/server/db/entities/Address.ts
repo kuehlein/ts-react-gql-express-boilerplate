@@ -23,13 +23,13 @@ export default class Address extends BaseEntity {
   public country: string;
 
   @IsUUID()
-  @Column()
+  @Column({ nullable: true })
   public googlePlaceId?: string;
 
   @PrimaryGeneratedColumn("uuid")
   public id: string;
 
-  @Column()
+  @Column({ nullable: true }) // !!!!!!! ?????????????
   public secondaryAddress: string;
 
   @Column({ nullable: false })
@@ -40,7 +40,7 @@ export default class Address extends BaseEntity {
   public streetAddress: string;
 
   @IsNotEmpty()
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: false })
   public streetName: string;
 
   @Length(3, 12)

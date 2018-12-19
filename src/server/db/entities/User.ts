@@ -79,7 +79,7 @@ export default class User extends BaseEntity {
 
   @IsUUID()
   @IsNotEmpty()
-  @Column({ unique: true })
+  @Column({ nullable: true, unique: true })
   public googleId?: string;
 
   @PrimaryGeneratedColumn("uuid")
@@ -90,7 +90,7 @@ export default class User extends BaseEntity {
   public lastName: string;
 
   @IsPhoneNumber("ZZ") // * "ZZ" for null --- prompt user for their region
-  @Column()
+  @Column({ nullable: true })
   public phoneNumber?: string;
 
   @IsNotEmpty()
@@ -101,12 +101,12 @@ export default class User extends BaseEntity {
   public salt: string;
 
   @IsUUID()
-  @Column()
+  @Column({ nullable: true })
   public stripeId?: string;
 
   @Length(4) // ! minimum length is 4 characters
   @IsNotEmpty()
-  @Column()
+  @Column({ nullable: false })
   public username: string;
 
   /**

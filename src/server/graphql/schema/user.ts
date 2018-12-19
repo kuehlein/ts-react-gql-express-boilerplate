@@ -22,17 +22,17 @@ export const typeDef: DocumentNode = gql`
     phoneNumber: String
     username: String!
   }
-  type Mutation {
-    login(email: User[email]!, password: User[password]!): User!
-    logout(id: User[id])
-    signup(user: User): User!
-  }
+  # type Mutation {
+  #   login(email: User[email]!, password: User[password]!): User!
+  #   logout(id: User[id])
+  #   signup(user: User): User!
+  # }
 `;
 
 // ! how to replace `req` --- or keep `req`???
 export const resolver: IResolvers = {
   User: {
-    avatar: root => root.avatar,
+    avatar: (root): User["avatar"] => root.avatar,
     birthday: root => root.birthday,
     createdAt: root => root.createdAt,
     email: email => email,
