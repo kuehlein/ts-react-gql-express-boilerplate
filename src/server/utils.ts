@@ -1,5 +1,17 @@
 import chalk from "chalk";
 
+interface IDesigns {
+  error: string;
+  log: string;
+  warn: string;
+}
+
+interface IColors {
+  error: "redBright";
+  log: "cyanBright";
+  warn: "yellow";
+}
+
 /**
  * Formats and colors logs to the console given a `status` ("log" | "warn" | "error")
  * and any number of strings you may wish to pass. NOTE: you can style the input strings (using
@@ -10,7 +22,7 @@ export const prettyLogger = (
   ...text: string[]
 ): void => {
   const indent: string = "             ";
-  const designs: {} = {
+  const designs: IDesigns = {
     error: chalk.reset.redBright(
       "\n#########################################################"
     ),
@@ -21,7 +33,7 @@ export const prettyLogger = (
       "\n*********************************************************"
     )
   };
-  const colors: {} = {
+  const colors: IColors = {
     error: "redBright",
     log: "cyanBright",
     warn: "yellow"

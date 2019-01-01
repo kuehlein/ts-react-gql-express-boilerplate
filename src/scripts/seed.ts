@@ -7,20 +7,18 @@ import { Address, User } from "../server/db";
 import { prettyLogger } from "../server/utils";
 import { default as doggie } from "./doggie";
 
+// ! how to sync db to overwrite data / error when drop tables + run
+
 /**
  * Seeds the database with `process.env.SEED_NUM` random users and addresses.
  */
 const seed = async (): Promise<Connection> => {
   const db = getConnection();
-  if (db.isConnected == false) await db.connect();
+  if (db.isConnected === false) {
+    await db.connect().catch(err => console.log(err));
+  }
 
-  const seedUsers: Promise<User>[] = [];
-  const seedAddresses: Promise<Address>[] = [];
-
-  await createUsers(db, Number(process.env.SEED_NUM), seedUsers, seedAddresses);
-
-  await Promise.all(seedUsers);
-  await Promise.all(seedAddresses);
+  createUsers(db, Number(process.env.SEED_NUM));
 
   prettyLogger("log", ...doggie(`Seeded ${process.env.SEED_NUM} users!`));
 
@@ -28,21 +26,34 @@ const seed = async (): Promise<Connection> => {
 };
 
 /**
- * Creates `num` of new `user`s with associated `address`es (by invoking `createAddresses`).
+ * Creates `num` of new `user`s with associated `address`es,
+ * bulk creates the users, then addresses.
  */
-const createUsers = async (
-  db: Connection,
-  num: number,
-  seedUsers: Promise<User>[],
-  seedAddresses: Promise<Address>[]
-): Promise<void> => {
+const createUsers = async (db: Connection, num: number): Promise<void> => {
+  const users: User[] = [];
+  const addresses: Address[] = [];
+
   for (let i = num; i > 0; i--) {
     const newUser = buildUser(i);
-    const createdUser = db.getRepository(User).save(newUser);
-
-    seedUsers.push(createdUser);
-    createdUser.then(() => createAddresses(db, newUser, i % 3, seedAddresses));
+    users.push(newUser);
+    createAddresses(addresses, newUser, i % 3);
   }
+
+  await db
+    .createQueryBuilder()
+    .insert()
+    .into(User)
+    .values(users)
+    .execute()
+    .catch(err => console.log(err));
+
+  await db
+    .createQueryBuilder()
+    .insert()
+    .into(Address)
+    .values(addresses)
+    .execute()
+    .catch(err => console.log(err));
 };
 
 /**
@@ -50,38 +61,38 @@ const createUsers = async (
  */
 const buildUser = (i: number): User => {
   const newUser = new User();
+
   newUser.avatar = internet.avatar();
   newUser.birthday = date.past(1920);
+  newUser.firstName = name.firstName();
   newUser.email =
     newUser.firstName +
     random.uuid().split("-")[0] +
     "@" +
     internet.domainName();
-  newUser.firstName = name.firstName();
   newUser.googleId = i % 4 === 0 ? random.uuid() : null;
   newUser.lastName = name.lastName();
   newUser.password = internet.password();
   newUser.phoneNumber = i % 3 === 0 ? phone.phoneNumber() : null;
   newUser.stripeId = i % 5 === 0 ? random.uuid() : null;
-  newUser.username = internet.userName();
+  newUser.username = internet.userName() + random.uuid().split("-")[0];
 
   return newUser;
 };
 
 /**
- * Given a `user`, creates a `num` of associated `address`es.
+ * Given a `user`, creates a `num` (0 - 2) of associated `address`es.
  */
-const createAddresses = async (
-  db: Connection,
+const createAddresses = (
+  addresses: Address[],
   user: User,
-  num: number,
-  seedAddresses: Promise<Address>[]
-): Promise<void> => {
+  num: number
+): Address[] => {
   for (let i = num; i > 0; i--) {
-    const newAddress = buildAddress(user, i);
-
-    seedAddresses.push(db.getRepository(Address).save(newAddress));
+    addresses.push(buildAddress(user, i));
   }
+
+  return addresses;
 };
 
 /**
@@ -117,7 +128,10 @@ const runSeed = async (): Promise<void> => {
     await db.close();
     console.log("Db connection closed.");
   } catch (err) {
-    prettyLogger("error", "\n" + JSON.stringify(err, null, 2));
+    console.log("hit");
+    console.log(err);
+    // ! vvv not properly logging
+    // prettyLogger("error", "\n" + JSON.stringify(err, null, 2));
     process.exitCode = 1;
   }
 };

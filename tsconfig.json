@@ -3,7 +3,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,
-    "baseUrl": "..",
+    "baseUrl": ".",
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -12,7 +12,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "outDir": "../ts-sourcemap/",
+    "outDir": "./ts-sourcemap/",
     "preserveConstEnums": true,
     "pretty": true,
     "removeComments": true,
@@ -20,5 +20,5 @@
     "target": "es5"
   },
   "exclude": ["../node_modules", "**/*.spec.ts"],
-  "files": ["../src/server/index.ts", "../src/server/db/entities/User.ts"]
+  "files": ["./src/server/index.ts", "./src/server/db/entities/User.ts"]
 }

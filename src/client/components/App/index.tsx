@@ -5,14 +5,14 @@ import { HttpLink } from "apollo-link-http";
 import React, { Component } from "react";
 import { ApolloProvider } from "react-apollo";
 import { hot } from "react-hot-loader";
-// import { Provider } from "react-redux";
+import { Provider } from "react-redux";
 
+import rootStore from "../../store";
 import "./app.css";
 
 // import Routes from './routes'
-// import store from "../store";
 
-import { SignupAndLogin } from "../";
+import { SignupAndLogin, UserInfo } from "../";
 
 // If you use React Router, make this component
 // render <Router> with your routes. Currently,
@@ -44,7 +44,6 @@ class App extends Component<{}, IState> {
   });
 
   constructor(props: {}) {
-    // ! undefined?
     super(props);
     this.state = {
       isSignup: true
@@ -53,16 +52,21 @@ class App extends Component<{}, IState> {
 
   public render() {
     return (
-      <>
+      <Provider store={rootStore}>
         <ApolloProvider client={this.gqlClient}>
-          <SignupAndLogin formType={this.state.isSignup ? "signup" : "login"} />
-          <button
-            onClick={() => this.setState({ isSignup: !this.state.isSignup })}
-          >
-            {this.state.isSignup ? "Login" : "Signup"}
-          </button>
+          <div>
+            <SignupAndLogin
+              formType={this.state.isSignup ? "Signup" : "Login"}
+            />
+            <button
+              onClick={() => this.setState({ isSignup: !this.state.isSignup })}
+            >
+              {this.state.isSignup ? "Login" : "Signup"}
+            </button>
+          </div>
+          {/* <UserInfo formType={this.state.isSignup ? "Signup" : "Login"} /> */}
         </ApolloProvider>
-      </>
+      </Provider>
     );
   }
 }

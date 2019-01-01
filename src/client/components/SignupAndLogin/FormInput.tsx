@@ -3,36 +3,81 @@ import React, { SFC } from "react";
 
 import { ILoginState, ISignupState } from "./";
 
-interface IFormInputProps {
-  content: string;
+/**
+ * Utility function to check two fields for equality.
+ */
+const checkForValidInput = (
+  user: ISignupState | ILoginState,
+  key1: keyof ISignupState | keyof ILoginState,
+  key2: keyof ISignupState | keyof ILoginState
+): string => (user[key1] === user[key2] ? "" : "invalid-field");
+
+interface IFormInputsProps {
   handleChange: (
-    placeholder: keyof ILoginState | keyof ISignupState,
+    key: keyof ISignupState | keyof ILoginState,
     value: string
   ) => void;
-  placeholder: keyof ILoginState | keyof ISignupState;
+  field?: keyof ISignupState | keyof ILoginState;
+  isConfirm?: boolean;
+  user: ISignupState | ILoginState;
 }
 
-const FormInput: SFC<IFormInputProps> = ({
-  content,
-  handleChange,
-  placeholder
-}) => (
-  <>
+const defaultProps = {};
+
+const FieldConfirm: SFC<IFormInputsProps> = ({ user, handleChange, field }) => {
+  const confirmField = `confirm${_.capitalize(field)}` as keyof ISignupState;
+  return (
     <label htmlFor="input">
-      {_.capitalize(placeholder)}
+      {_.startCase(confirmField)}
       <input
-        onChange={e => handleChange(placeholder, e.target.value)}
-        placeholder={placeholder}
-        value={content}
+        className={
+          (user as ISignupState)[confirmField]
+            ? checkForValidInput(user, field, confirmField)
+            : ""
+        }
+        onChange={e => handleChange(confirmField, e.target.value)}
+        placeholder={_.startCase(confirmField)}
+        required
+        type={field === "password" ? "password" : "text"}
+        value={(user as ISignupState)[confirmField]}
       />
     </label>
-    <hr />
-  </>
-);
-
-FormInput.defaultProps = {
-  content: "",
-  handleChange: () => {}
+  );
 };
 
-export default FormInput;
+const FieldPrompt: SFC<IFormInputsProps> = ({ user, handleChange, field }) => (
+  <label htmlFor="input">
+    {_.startCase(field)}
+    <input
+      className=""
+      onChange={e => handleChange(field, e.target.value)}
+      placeholder={_.startCase(field)}
+      required
+      type={field === "password" ? "password" : "text"}
+      value={user[field]}
+    />
+  </label>
+);
+
+const FormInputs: SFC<IFormInputsProps> = ({
+  handleChange,
+  isConfirm,
+  user
+}) => {
+  const InputField = isConfirm ? FieldConfirm : FieldPrompt;
+  return (
+    <>
+      <InputField user={user} handleChange={handleChange} field={"email"} />
+      <InputField user={user} handleChange={handleChange} field={"password"} />
+      {!isConfirm && (
+        <FieldPrompt
+          user={user}
+          handleChange={handleChange}
+          field={"username"}
+        />
+      )}
+    </>
+  );
+};
+
+export default FormInputs;

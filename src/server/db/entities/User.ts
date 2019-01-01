@@ -56,37 +56,36 @@ export default class User extends BaseEntity {
       .digest("hex");
   }
 
-  // ! upload to the interwebz client side...
   @IsUrl()
   @Column({ default: defaultAvatar })
   public avatar: string;
 
   @IsDate()
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   public birthday: Date;
 
   @IsDate()
-  @CreateDateColumn({ default: () => "NOW()", nullable: false })
+  @CreateDateColumn({ default: () => "NOW()" })
   public createdAt: Date;
 
   @IsEmail()
-  @Column({ nullable: false, unique: true })
+  @Column({ unique: true })
   public email: string;
 
   @IsNotEmpty()
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   public firstName: string;
 
   @IsUUID()
   @IsNotEmpty()
-  @Column({ nullable: true, unique: true })
+  @Column({ nullable: true })
   public googleId?: string;
 
   @PrimaryGeneratedColumn("uuid")
   public id: string;
 
   @IsNotEmpty()
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   public lastName: string;
 
   @IsPhoneNumber("ZZ") // * "ZZ" for null --- prompt user for their region
@@ -94,31 +93,30 @@ export default class User extends BaseEntity {
   public phoneNumber?: string;
 
   @IsNotEmpty()
-  @Column({ nullable: false })
+  @Column()
   public password: string;
 
-  @Column({ nullable: false })
+  @Column()
   public salt: string;
 
   @IsUUID()
   @Column({ nullable: true })
   public stripeId?: string;
 
-  @Length(4) // ! minimum length is 4 characters
-  @IsNotEmpty()
-  @Column({ nullable: false })
+  @Length(4, 16)
+  @Column({ unique: true })
   public username: string;
 
   /**
    * One user can have many addresses.
    */
   @OneToMany(type => Address, address => address.user)
-  public addresses?: Address[];
+  public addresses?: Promise<Address[]>;
 
   /**
    * Virtual field for comparing changes in `password`.
    */
-  /* tslint:disable-next-line */
+  /* tslint:disable-next-line:variable-name */
   private _tempPassword: string;
 
   /**

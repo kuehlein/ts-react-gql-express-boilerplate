@@ -7,7 +7,7 @@ import Server from "./server";
 const app = new Server();
 
 if (process.env.NODE_ENV !== "production") {
-  // tslint:disable-next-line
+  // tslint:disable-next-line:no-var-requires
   require(path.resolve(__dirname, "..", "..", "secrets.js"));
 }
 

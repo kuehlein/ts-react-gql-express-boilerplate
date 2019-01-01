@@ -2,7 +2,7 @@ import bodyParser from "body-parser";
 import chalk from "chalk";
 import compression from "compression";
 import SessionStore from "connect-pg-simple";
-import express, { Application } from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import session from "express-session";
 import morgan from "morgan";
 import passport from "passport";
@@ -11,6 +11,8 @@ import { getConnection } from "typeorm";
 import webpack, { Compiler } from "webpack";
 import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
+
+import { ResponseError } from "./server.d";
 
 import config from "../webpack.dev.config";
 import gqlServer from "./graphql";
@@ -43,7 +45,7 @@ export default class Server {
 
   /**
    * Creates an app for development, applies `webpack-dev-middleware`
-   * and `webpack-hot-middleware` to enable Hot Module Replacement.
+   * and `webpack-hot-middleware` to enable Hot Module Replacement if `process.env.HMR` is `enabled`.
    */
   public createAppDev(): void {
     this.syncDb()
@@ -55,8 +57,7 @@ export default class Server {
   }
 
   /**
-   * Creates an app for development, applies `webpack-dev-middleware`
-   * and `webpack-hot-middleware` to enable Hot Module Replacement.
+   * Creates an optimized production instance of the express server.
    */
   public createAppProd(): void {
     this.syncDb()
@@ -69,9 +70,10 @@ export default class Server {
    * Syncs the database to begin the creation of the server.
    */
   private async syncDb(): Promise<void> {
-    // create db connection
     const db = getConnection();
-    if (db.isConnected == false) await db.connect();
+    if (db.isConnected === false) {
+      await db.connect().catch(err => console.log(err));
+    }
   }
 
   /**
@@ -146,13 +148,20 @@ export default class Server {
    * without being handled earlier on.
    */
   private errorHandlingEndware(): void {
-    this.appInstance.use((err, req, res, next) => {
-      console.error(err);
-      console.error(err.stack);
-      res
-        .status(err.status || 500)
-        .send(err.message || "Internal server error.");
-    });
+    this.appInstance.use(
+      (
+        err: ResponseError,
+        req: Request,
+        res: Response,
+        next: NextFunction
+      ): void => {
+        console.error(err);
+        console.error(err.stack);
+        res
+          .status(err.status || 500)
+          .send(err.message || "Internal server error.");
+      }
+    );
   }
 
   /**

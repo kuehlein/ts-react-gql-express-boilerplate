@@ -16,10 +16,11 @@ import { User } from "./";
 @Entity()
 export default class Address extends BaseEntity {
   @IsNotEmpty()
-  @Column({ nullable: false })
+  @Column()
   public city: string;
 
-  @Column({ nullable: false })
+  @IsNotEmpty()
+  @Column()
   public country: string;
 
   @IsUUID()
@@ -29,23 +30,24 @@ export default class Address extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   public id: string;
 
-  @Column({ nullable: true }) // !!!!!!! ?????????????
-  public secondaryAddress: string;
+  @Column({ nullable: true })
+  public secondaryAddress?: string;
 
-  @Column({ nullable: false })
+  @IsNotEmpty()
+  @Column()
   public state: string;
 
   @IsNotEmpty()
-  @Column({ nullable: false })
+  @Column()
   public streetAddress: string;
 
   @IsNotEmpty()
-  @Column({ nullable: false })
+  @Column()
   public streetName: string;
 
   @Length(3, 12)
   @IsNotEmpty()
-  @Column({ nullable: false })
+  @Column()
   public zipCode: string;
 
   /**
