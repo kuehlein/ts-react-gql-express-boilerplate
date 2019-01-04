@@ -7,6 +7,8 @@ import { ISignupAndLogin } from "../../../typings";
 import { User } from "../../db";
 import { throwIfError } from "../../utils";
 
+// ! put local strategy here???
+
 /**
  * Creates a new user account and logs them in using `req.login`. If the provided email is already in use
  * or no email or password is provided, an error will be thrown.
@@ -26,21 +28,29 @@ export const signup = async (
 
   return createdUser
     .save()
-    .then((savedUser: User) => {
-      req.body.username = savedUser.username;
-      req.body.password = user.password;
+    .then((savedUser: User) =>
+      new Promise((resolve, reject) =>
+        passport.authenticate(
+          "local",
+          // ! can i specify no redirect?
+          (err: any, serializedUser: User, info: any) => {
+            if (err) throw new Error(err);
 
-      passport.authenticate("local", () => {
-        req.logIn(savedUser, err => {
-          if (err) throw new Error(err);
-          return savedUser;
-        });
-      })(req);
-
-      // return new Promise((resolve, reject) => {
-      // });
-      return savedUser;
-    })
+            return req.login(serializedUser, (err: any) => {
+              if (err) reject(err);
+              return resolve(serializedUser);
+            });
+          }
+        )(
+          (() => {
+            // req.body.emailOrUsername = savedUser.username || savedUser.email;
+            req.body.username = savedUser.username;
+            req.body.password = user.password;
+            return req;
+          })()
+        )
+      ).catch(err => console.log(err))
+    )
     .catch(err =>
       console.log(
         "\u001b[91;1mFailed to create a new user [graphql/auth/index --- signup]:\u001b[0m",
@@ -90,7 +100,7 @@ export const login = async (
 export const logout = (req: Request): boolean => {
   const authd = req.isAuthenticated();
   console.log("req.isAuthenticated()---------", authd);
-  console.log("req.user----------------------", req.user);
+  console.log("req.user---(before logout)----", req.user);
   if (authd) {
     console.log("hit");
     req.logout();
@@ -102,43 +112,3 @@ export const logout = (req: Request): boolean => {
 };
 
 // ! passport-http
-
-// /**
-//  * Creates a new user account and logs them in using `req.login`. If the provided email is already in use
-//  * or no email or password is provided, an error will be thrown.
-//  */
-// export const signup = async (
-//   req: Request,
-//   user: ISignupAndLogin
-// ): Promise<User | void> => {
-//   // ! idk what im doin here vvv
-//   auth();
-
-//   // ! will break vvv --- need email OR username
-//   if (!user.email || !user.password || !user.username) {
-//     throw new Error("You must provide an email and password.");
-//   }
-
-//   const createdUser = new User();
-//   createdUser.email = user.email;
-//   createdUser.password = user.password;
-//   createdUser.username = user.username;
-
-//   return (
-//     createdUser
-//       .save()
-//       .then(async savedUser => {
-//         passport.authenticate("local");
-//         return savedUser;
-//       })
-//       // .then(() => {
-//       //   // this guy will handle req.login() ?
-//       // })
-//       .catch(err =>
-//         console.log(
-//           "\u001b[91;1mFailed to create a new user [graphql/auth/index --- signup]:\u001b[0m",
-//           err
-//         )
-//       )
-//   );
-// };

@@ -21,8 +21,9 @@ import {
   PrimaryGeneratedColumn
 } from "typeorm";
 
-const defaultAvatar = path.resolve("public", "assets", "default-avatar.jpg");
 import { Address } from "./";
+
+const defaultAvatar = path.resolve("public", "assets", "default-avatar.jpg");
 
 /**
  * User model. Contains fields for name, email, phone, password and other user related information,
@@ -124,10 +125,25 @@ export default class User extends BaseEntity {
   }
 
   /**
-   * isValidPassword (instance method)
+   * Compare a candidate password with a user's hashed
+   * password in constant time (to prevent timing attacks).
    */
   public isValidPassword(candidatePwd: string): boolean {
-    return User.encryptPassword(candidatePwd, this.salt) === this.password;
+    const encryptedCandidate: string = User.encryptPassword(
+      candidatePwd,
+      this.salt
+    );
+
+    if (this.password.length !== encryptedCandidate.length) return false;
+
+    let result: number = 0;
+
+    for (let i = encryptedCandidate.length - 1; i >= 0; i--) {
+      // tslint:disable-next-line:no-bitwise
+      result |= encryptedCandidate.charCodeAt(i) ^ this.password.charCodeAt(i);
+    }
+
+    return result === 0;
   }
 
   /**

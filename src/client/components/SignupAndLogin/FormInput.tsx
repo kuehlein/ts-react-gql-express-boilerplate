@@ -1,12 +1,26 @@
 import _ from "lodash";
 import React, { SFC } from "react";
 
+import { isEmail } from "../../../utils";
 import { ILoginState, ISignupState } from "./";
+
+/**
+ * Utility function to check for a valid input.
+ */
+const checkForValidInput = (
+  user: ISignupState | ILoginState,
+  key: keyof ISignupState | keyof ILoginState
+) => {
+  if (key === "email") return isEmail(user.email);
+  if (key === "username") return user.username.length > 3;
+  // ! make it more complex later
+  if (key === "password") return user.password.length > 7;
+};
 
 /**
  * Utility function to check two fields for equality.
  */
-const checkForValidInput = (
+const checkForValidConfirmationInput = (
   user: ISignupState | ILoginState,
   key1: keyof ISignupState | keyof ILoginState,
   key2: keyof ISignupState | keyof ILoginState
@@ -30,7 +44,7 @@ const FieldConfirm: SFC<IFormInputsProps> = ({ user, handleChange, field }) => {
       <input
         className={
           (user as ISignupState)[confirmField]
-            ? checkForValidInput(user, field, confirmField)
+            ? checkForValidConfirmationInput(user, field, confirmField)
             : ""
         }
         onChange={e => handleChange(confirmField, e.target.value)}
@@ -47,7 +61,9 @@ const FieldPrompt: SFC<IFormInputsProps> = ({ user, handleChange, field }) => (
   <label htmlFor="input">
     {_.startCase(field)}
     <input
-      className=""
+      className={
+        checkForValidInput(user, field) || !user[field] ? "" : "invalid-field"
+      }
       onChange={e => handleChange(field, e.target.value)}
       placeholder={_.startCase(field)}
       required

@@ -15,6 +15,7 @@ import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
 import { ISignupAndLogin } from "src/typings";
+import { isEmail } from "../utils";
 import { ResponseError } from "./server.d";
 
 import config from "../webpack.dev.config";
@@ -90,6 +91,9 @@ export default class Server {
     // logging middleware
     this.instance.use(morgan("dev"));
 
+    // cookie parsing middleware
+    this.instance.use(cookieParser());
+
     // body parsing middleware
     this.instance.use(bodyParser.json());
     this.instance.use(bodyParser.urlencoded({ extended: true }));
@@ -105,9 +109,6 @@ export default class Server {
    * Creates an express session and initialized passport with the session.
    */
   private sessionAndPassport(): void {
-    // cookie parsing middleware
-    this.instance.use(cookieParser());
-
     // session middleware with passport
     this.instance.use(
       session({
@@ -135,28 +136,32 @@ export default class Server {
     passport.use(
       new Strategy(
         {
-          // usernameField: "email" // || "username"
           passReqToCallback: true
+          // usernameField: "emailOrUsername"
         },
-        (req, username, password, done) => {
-          // console.log("wee is getting hit bby");
+        async (req, emailOrUsername, password, done) => {
+          console.log("we are in the thing", emailOrUsername, password);
 
-          User.findOne({ username })
+          let key: "email" | "username";
+          if (isEmail(emailOrUsername)) {
+            key = "email";
+            emailOrUsername = emailOrUsername.toLowerCase();
+          } else {
+            key = "username";
+          }
+
+          await User.findOne({ [key]: emailOrUsername })
             .then(user => {
-              // console.log("this is the user boi", user);
-
               if (!user) {
-                return done(null, false, { message: "Incorrect username." });
+                return done(null, false, { message: `Incorrect ${key}.` });
               }
               if (!user.isValidPassword(password)) {
                 return done(null, false, { message: "Incorrect password." });
               }
-              // console.log("no err");
+              console.log("all is good in local strategy");
               return done(null, user);
             })
             .catch(err => {
-              // console.log("it erred", err);
-
               return done(err);
             });
         }
@@ -165,7 +170,6 @@ export default class Server {
 
     // passport registration
     passport.serializeUser((user: User, done): void => done(null, user.id));
-    // ! is this right??? vvvvvv
     passport.deserializeUser(
       async (id: string, done): Promise<void> => {
         try {

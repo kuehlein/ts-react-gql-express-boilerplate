@@ -38,7 +38,16 @@ export const resolver: IResolvers = {
       parent,
       { email, password, username }: ISignupAndLogin,
       { req }: IContext
-    ) => await signup(req, { email, password, username })
+    ) => {
+      const x = await signup(req, { email, password, username });
+      console.log("???aeq.session.passport");
+      console.log("req.user--(after login)---", req.user);
+      console.log(
+        "req.isAuthenticated--(after login)---",
+        req.isAuthenticated()
+      );
+      return x;
+    }
   },
   // Query: {
   //   login: (parent, { email, password, username }, { req }: IContext) =>
