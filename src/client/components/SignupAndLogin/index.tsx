@@ -1,11 +1,18 @@
+import { ApolloQueryResult } from "apollo-client";
 import _ from "lodash";
-import React, { Component, FormEvent } from "react";
-import { graphql } from "react-apollo";
+import React, { Component } from "react";
+import {
+  ApolloConsumer,
+  Mutation,
+  MutationFn,
+  OperationVariables
+} from "react-apollo";
 
 import "./signupAndLogin.css";
 
-import { login, signup } from "../../queries";
-import FormInput from "./FormInput";
+import { User } from "../../../server/db";
+import { LOGIN, SIGNUP } from "../../queries";
+import Form from "./Form";
 
 interface ISignupAndLoginProps {
   formType: "Signup" | "Login";
@@ -62,23 +69,40 @@ export default class SignupAndLogin extends Component<
   public render() {
     const { formType } = this.props;
 
-    return (
-      <form onSubmit={this.handleSubmit} style={{ display: "flex" }}>
-        {formType}
-        <FormInput
-          isConfirm={false}
-          handleChange={this.handleChange}
-          user={this.state}
-        />
-        {formType === "Signup" && (
-          <FormInput
-            isConfirm={true}
-            handleChange={this.handleChange}
-            user={this.state}
-          />
+    return formType === "Signup" ? (
+      <Mutation mutation={SIGNUP}>
+        {(signup, { data }) => (
+          <form
+            onSubmit={() => {
+              event.preventDefault();
+              this.handleSubmit(signup);
+            }}
+          >
+            <Form
+              formType="Signup"
+              handleChange={this.handleChange}
+              user={this.state}
+            />
+          </form>
         )}
-        <button>{formType}</button>
-      </form>
+      </Mutation>
+    ) : (
+      <ApolloConsumer>
+        {client => (
+          <form
+            onSubmit={() => {
+              event.preventDefault();
+              this.handleSubmit(null, client.query);
+            }}
+          >
+            <Form
+              formType="Login"
+              handleChange={this.handleChange}
+              user={this.state}
+            />
+          </form>
+        )}
+      </ApolloConsumer>
     );
   }
 
@@ -96,21 +120,28 @@ export default class SignupAndLogin extends Component<
   /**
    * Handles submitting new user / login to backend
    */
-  private handleSubmit(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
+  private handleSubmit(
+    // ! formerly: MutationFn<any, OperationVariables>
+    signup?: MutationFn<OperationVariables>,
+    login?: ({}) => Promise<ApolloQueryResult<User["id"]>>
+  ): void {
+    const newUser = {
+      email: this.state.email,
+      password: this.state.password,
+      username: this.state.username
+    };
 
-    const { email, password, username } = this.state;
+    if (signup) signup({ variables: newUser });
+    else {
+      login({
+        query: LOGIN,
+        variables: newUser
+      });
+    }
 
-    // ! check for Signup or Login?
-    this.props
-      .mutate({
-        variables: {
-          email,
-          password,
-          username
-        }
-      })
-      .catch((err: any) => console.log(err));
+    // .query<T, TVariables>
+
+    // ! clear local state
   }
 }
 

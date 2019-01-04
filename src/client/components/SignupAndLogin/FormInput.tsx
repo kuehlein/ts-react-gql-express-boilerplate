@@ -22,8 +22,6 @@ interface IFormInputsProps {
   user: ISignupState | ILoginState;
 }
 
-const defaultProps = {};
-
 const FieldConfirm: SFC<IFormInputsProps> = ({ user, handleChange, field }) => {
   const confirmField = `confirm${_.capitalize(field)}` as keyof ISignupState;
   return (
@@ -79,5 +77,21 @@ const FormInputs: SFC<IFormInputsProps> = ({
     </>
   );
 };
+
+const defaultProps = {
+  formType: "Signup",
+  handleChange: () => {},
+  handleSubmit: () => {},
+  user: {
+    confirmEmail: "",
+    confirmPassword: "",
+    email: "",
+    password: "",
+    username: ""
+  }
+};
+FieldConfirm.defaultProps = defaultProps;
+FieldPrompt.defaultProps = defaultProps;
+FormInputs.defaultProps = defaultProps;
 
 export default FormInputs;

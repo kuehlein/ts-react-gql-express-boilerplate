@@ -21,15 +21,7 @@ import {
   PrimaryGeneratedColumn
 } from "typeorm";
 
-const defaultAvatar = path.resolve(
-  "..",
-  "..",
-  "..",
-  "..",
-  "public",
-  "assets",
-  "default-avatar.jpg"
-);
+const defaultAvatar = path.resolve("public", "assets", "default-avatar.jpg");
 import { Address } from "./";
 
 /**
@@ -62,7 +54,7 @@ export default class User extends BaseEntity {
 
   @IsDate()
   @Column({ nullable: true })
-  public birthday: Date;
+  public birthday?: Date;
 
   @IsDate()
   @CreateDateColumn({ default: () => "NOW()" })
@@ -74,7 +66,7 @@ export default class User extends BaseEntity {
 
   @IsNotEmpty()
   @Column({ nullable: true })
-  public firstName: string;
+  public firstName?: string;
 
   @IsUUID()
   @IsNotEmpty()
@@ -86,7 +78,7 @@ export default class User extends BaseEntity {
 
   @IsNotEmpty()
   @Column({ nullable: true })
-  public lastName: string;
+  public lastName?: string;
 
   @IsPhoneNumber("ZZ") // * "ZZ" for null --- prompt user for their region
   @Column({ nullable: true })
@@ -132,9 +124,9 @@ export default class User extends BaseEntity {
   }
 
   /**
-   * correctPassword (instance method)
+   * isValidPassword (instance method)
    */
-  public correctPassword(candidatePwd: any): boolean {
+  public isValidPassword(candidatePwd: string): boolean {
     return User.encryptPassword(candidatePwd, this.salt) === this.password;
   }
 

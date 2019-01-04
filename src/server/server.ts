@@ -2,19 +2,23 @@ import bodyParser from "body-parser";
 import chalk from "chalk";
 import compression from "compression";
 import SessionStore from "connect-pg-simple";
+import cookieParser from "cookie-parser";
 import express, { Application, NextFunction, Request, Response } from "express";
 import session from "express-session";
 import morgan from "morgan";
 import passport from "passport";
+import { Strategy } from "passport-local";
 import path from "path";
 import { getConnection } from "typeorm";
 import webpack, { Compiler } from "webpack";
 import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
+import { ISignupAndLogin } from "src/typings";
 import { ResponseError } from "./server.d";
 
 import config from "../webpack.dev.config";
+import { User } from "./db";
 import gqlServer from "./graphql";
 import { prettyLogger } from "./utils";
 
@@ -26,7 +30,7 @@ export default class Server {
   /**
    * The instance of the express server.
    */
-  public appInstance: Application;
+  public instance: Application;
 
   /**
    * The port that the application runs on.
@@ -40,7 +44,7 @@ export default class Server {
     process.env.HMR === "enabled" ? "enabled" : "disabled";
 
   constructor() {
-    this.appInstance = express();
+    this.instance = express();
   }
 
   /**
@@ -84,17 +88,16 @@ export default class Server {
    */
   private applyMiddleware(): void {
     // logging middleware
-    this.appInstance.use(morgan("dev"));
+    this.instance.use(morgan("dev"));
 
     // body parsing middleware
-    this.appInstance.use(bodyParser.json());
-    this.appInstance.use(bodyParser.urlencoded({ extended: true }));
+    this.instance.use(bodyParser.json());
+    this.instance.use(bodyParser.urlencoded({ extended: true }));
 
     // compression middleware
-    this.appInstance.use(compression());
+    this.instance.use(compression());
 
     this.sessionAndPassport();
-    this.auth();
     this.graphql();
   }
 
@@ -102,8 +105,11 @@ export default class Server {
    * Creates an express session and initialized passport with the session.
    */
   private sessionAndPassport(): void {
+    // cookie parsing middleware
+    this.instance.use(cookieParser());
+
     // session middleware with passport
-    this.appInstance.use(
+    this.instance.use(
       session({
         resave: false,
         saveUninitialized: false,
@@ -121,23 +127,75 @@ export default class Server {
         })
       })
     );
-    this.appInstance.use(passport.initialize());
-    this.appInstance.use(passport.session());
-  }
 
-  /**
-   * Route to user authentication.
-   */
-  private auth(): void {
-    // ! this route might be obsolete with graphql
-    // TODO: this.appInstance.use("/auth", require("./auth"));
+    this.instance.use(passport.initialize());
+    this.instance.use(passport.session());
+
+    // passport local strategy
+    passport.use(
+      new Strategy(
+        {
+          // usernameField: "email" // || "username"
+          passReqToCallback: true
+        },
+        (req, username, password, done) => {
+          // console.log("wee is getting hit bby");
+
+          User.findOne({ username })
+            .then(user => {
+              // console.log("this is the user boi", user);
+
+              if (!user) {
+                return done(null, false, { message: "Incorrect username." });
+              }
+              if (!user.isValidPassword(password)) {
+                return done(null, false, { message: "Incorrect password." });
+              }
+              // console.log("no err");
+              return done(null, user);
+            })
+            .catch(err => {
+              // console.log("it erred", err);
+
+              return done(err);
+            });
+        }
+      )
+    );
+
+    // passport registration
+    passport.serializeUser((user: User, done): void => done(null, user.id));
+    // ! is this right??? vvvvvv
+    passport.deserializeUser(
+      async (id: string, done): Promise<void> => {
+        try {
+          const user = await User.findOne({ id });
+          done(null, user);
+        } catch (err) {
+          done(err);
+        }
+      }
+    );
   }
 
   /**
    * Route to graphql api.
    */
   private graphql(): void {
-    gqlServer.applyMiddleware({ app: this.appInstance });
+    function isAuthenticated(req, res, next) {
+      return req.isAuthenticated() ? next() : res.redirect("/auth/google");
+    }
+
+    // this.instance.use(
+    //   "/graphql",
+    //   isAuthenticated,
+    //   graphqlHTTP(req => ({
+    //     schema,
+    //     graphiql: true,
+    //     context: req
+    //   }))
+
+    gqlServer.applyMiddleware({ app: this.instance });
 
     // handle requests that miss end points above
     this.errorHandlingEndware();
@@ -148,7 +206,7 @@ export default class Server {
    * without being handled earlier on.
    */
   private errorHandlingEndware(): void {
-    this.appInstance.use(
+    this.instance.use(
       (
         err: ResponseError,
         req: Request,
@@ -169,7 +227,7 @@ export default class Server {
    * *DEVELOPMENT ONLY*
    */
   private startListening(): void {
-    this.appInstance.listen(this.PORT, () => {
+    this.instance.listen(this.PORT, () => {
       const uri: string = `http://localhost:${this.PORT}`;
 
       prettyLogger(
@@ -190,7 +248,7 @@ export default class Server {
    */
   private webpackDevMiddleware(): void {
     const compiler: Compiler = webpack(config);
-    this.appInstance.use(
+    this.instance.use(
       webpackDevMiddleware(compiler, {
         logLevel: "warn",
         publicPath: config.output.publicPath,
@@ -199,7 +257,7 @@ export default class Server {
         }
       })
     );
-    this.appInstance.use(
+    this.instance.use(
       webpackHotMiddleware(compiler, {
         heartbeat: 2000,
         log: console.log,
@@ -207,7 +265,7 @@ export default class Server {
         reload: true
       })
     );
-    this.appInstance.use("/", (req, res, next) => {
+    this.instance.use("/", (req, res, next) => {
       res.writeHead(200, {
         Connection: "keep-alive",
         "Content-Type": "text/event-stream"
@@ -224,14 +282,14 @@ export default class Server {
     const rootDir = ["..", ".."];
 
     // staticly serve styles
-    this.appInstance.use(
+    this.instance.use(
       express.static(
         path.join(__dirname, ...rootDir, "src", "client", "main.css")
       )
     );
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
-    this.appInstance
+    this.instance
       .use(express.static(path.join(__dirname, ...rootDir)))
       .use((req, res, next) =>
         path.extname(req.path).length
@@ -240,7 +298,7 @@ export default class Server {
       );
 
     // sends index.html
-    this.appInstance.use("*", (req, res) => {
+    this.instance.use("*", (req, res) => {
       res.sendFile(path.join(__dirname, ...rootDir, "public", "index.html"));
     });
   }

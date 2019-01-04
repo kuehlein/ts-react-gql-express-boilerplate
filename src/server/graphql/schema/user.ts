@@ -2,70 +2,50 @@ import { gql } from "apollo-server-express";
 import { IResolvers } from "apollo-server-express";
 import { DocumentNode } from "graphql";
 
-// ! import { newAddress, newUser } from "../../../typings";
+import { ISignupAndLogin } from "../../../typings";
 import { User } from "../../db";
 import { IContext } from "../../server.d";
-// ! import { login, logout, signup } from "../auth";
+import { login, logout, signup } from "../auth";
 
 export const typeDef: DocumentNode = gql`
   scalar Date
 
   type User {
     avatar: String
-    birthday: Date!
-    createdAt: Date!
+    birthday: Date
+    createdAt: Date
     email: String!
-    firstName: String!
+    firstName: String
     googleId: String
     id: ID!
-    lastName: String!
+    lastName: String
     phoneNumber: String
     username: String!
   }
+  # type Query {
+  #   login(email: String!, password: String!): ID!
+  #   # logout(id: ID!): User! # need a name...
+  #   # me(): User!
+  # }
   type Mutation { # ! should these be seperate?
-    login(email: String!, password: String!): ID!
-    # logout(): ID!
-    # me(): User!
-    signup(
-      # user: User!
-      # {
-      avatar: String
-      birthday: String!
-      email: String!
-      firstName: String!
-      googleId: String
-      lastName: String!
-      password: String!
-      phoneNumber: String
-      username: String!
-      # },
-      # address: Address!
-      # {
-      city: String!
-      country: String!
-      googlePlaceId: String
-      id: String!
-      secondaryAddress: String
-      state: String!
-      streetAddress: String!
-      streetName: String!
-      zipCode: String! # user: User! # }
-    ): ID!
+    signup(email: String!, password: String!, username: String!): User!
   }
 `;
 
 export const resolver: IResolvers = {
   Mutation: {
-    // ! login: (parent, { email, password }, { req }: IContext) =>
-    // !  login(email, password, req),
-    // ! logout: (parent, { id }, { req }: IContext) => logout(req),
-    // me: (parent, args, { req }: IContext) => JSON.stringify(req.user),
-    // ! signup: (
-    // !  parent,
-    // !  { user, address }: { user: newUser; address: newAddress[] },
-    // !  { req }: IContext
-    // ! ) => signup(user, address, req)
+    signup: async (
+      parent,
+      { email, password, username }: ISignupAndLogin,
+      { req }: IContext
+    ) => await signup(req, { email, password, username })
   },
+  // Query: {
+  //   login: (parent, { email, password, username }, { req }: IContext) =>
+  //     login(email, password, username, req),
+  //   logout: (parent, args, { req }: IContext) => logout(req)
+  //   // me: (parent, args, { req }: IContext) => JSON.stringify(req.user),
+  // },
   User: {
     avatar: (root): User["avatar"] => root.avatar,
     birthday: root => root.birthday,

@@ -82,7 +82,8 @@ const prodConfig: Configuration = {
     minimizer
   },
   output: {
-    filename: "[name].[hash].js"
+    filename: "[name].[hash].js",
+    path: path.resolve(__dirname, ...rootDir, "public", "dist")
   },
   plugins,
   resolve: {
