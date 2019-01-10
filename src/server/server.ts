@@ -5,22 +5,22 @@ import SessionStore from "connect-pg-simple";
 import cookieParser from "cookie-parser";
 import express, { Application, NextFunction, Request, Response } from "express";
 import session from "express-session";
+import fs from "fs";
+import http from "http";
+import https from "https";
 import morgan from "morgan";
 import passport from "passport";
-import { Strategy } from "passport-local";
 import path from "path";
 import { getConnection } from "typeorm";
 import webpack, { Compiler } from "webpack";
 import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
-import { ISignupAndLogin } from "src/typings";
-import { isEmail } from "../utils";
 import { ResponseError } from "./server.d";
 
 import config from "../webpack.dev.config";
 import { User } from "./db";
-import gqlServer from "./graphql";
+import apollo from "./graphql";
 import { prettyLogger } from "./utils";
 
 /**
@@ -33,10 +33,16 @@ export default class Server {
    */
   public instance: Application;
 
-  /**
-   * The port that the application runs on.
-   */
-  private PORT: number = Number(process.env.PORT) || 3000;
+  private configurations = {
+    // Note: You may need sudo to run on port 443
+    development: { ssl: false, port: 4000, hostname: "localhost" },
+    production: { ssl: true, port: 443, hostname: "example.com" }
+  };
+
+  // ! new stuff
+  private config: { ssl: boolean; port: number; hostname: string };
+  private server: http.Server | https.Server;
+  private NODE_ENV: string = process.env.NODE_ENV || "production";
 
   /**
    * If `enabled`, Hot Module Replacement is active. Enable *FOR DEVELOPMENT ONLY*
@@ -46,6 +52,21 @@ export default class Server {
 
   constructor() {
     this.instance = express();
+    this.config = this.configurations[this.NODE_ENV];
+
+    // ! new stuff
+    // Create the HTTPS or HTTP server, per configuration
+    this.server = this.config.ssl
+      ? // Assumes certificates are in .ssl folder from package root.
+        // Make sure the files are secured.
+        https.createServer(
+          {
+            cert: fs.readFileSync(`./ssl/${this.NODE_ENV}/server.crt`),
+            key: fs.readFileSync(`./ssl/${this.NODE_ENV}/server.key`)
+          },
+          this.instance
+        )
+      : http.createServer(this.instance);
   }
 
   /**
@@ -88,6 +109,17 @@ export default class Server {
    * the graphql api are applied here.
    */
   private applyMiddleware(): void {
+    // this.instance.use((req, res, next) => {
+    //   res.set({
+    //     "Access-Control-Allow-Credentials": true,
+    //     "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    //     "Access-Control-Allow-Methods": "DELETE,GET,PATCH,POST,PUT",
+    //     "Access-Control-Allow-Origin": "*"
+    //   });
+
+    //   next();
+    // });
+
     // logging middleware
     this.instance.use(morgan("dev"));
 
@@ -112,6 +144,7 @@ export default class Server {
     // session middleware with passport
     this.instance.use(
       session({
+        cookie: { secure: false, maxAge: 4 * 60 * 60 * 1000 },
         resave: false,
         saveUninitialized: false,
         secret:
@@ -132,47 +165,17 @@ export default class Server {
     this.instance.use(passport.initialize());
     this.instance.use(passport.session());
 
-    // passport local strategy
-    passport.use(
-      new Strategy(
-        {
-          passReqToCallback: true
-          // usernameField: "emailOrUsername"
-        },
-        async (req, emailOrUsername, password, done) => {
-          console.log("we are in the thing", emailOrUsername, password);
-
-          let key: "email" | "username";
-          if (isEmail(emailOrUsername)) {
-            key = "email";
-            emailOrUsername = emailOrUsername.toLowerCase();
-          } else {
-            key = "username";
-          }
-
-          await User.findOne({ [key]: emailOrUsername })
-            .then(user => {
-              if (!user) {
-                return done(null, false, { message: `Incorrect ${key}.` });
-              }
-              if (!user.isValidPassword(password)) {
-                return done(null, false, { message: "Incorrect password." });
-              }
-              console.log("all is good in local strategy");
-              return done(null, user);
-            })
-            .catch(err => {
-              return done(err);
-            });
-        }
-      )
-    );
-
     // passport registration
-    passport.serializeUser((user: User, done): void => done(null, user.id));
+    passport.serializeUser(
+      (user: User, done): void => {
+        console.log("WAHT WHY serialize user");
+        return done(null, user.id);
+      }
+    );
     passport.deserializeUser(
       async (id: string, done): Promise<void> => {
         try {
+          console.log("WAH");
           const user = await User.findOne({ id });
           done(null, user);
         } catch (err) {
@@ -186,20 +189,7 @@ export default class Server {
    * Route to graphql api.
    */
   private graphql(): void {
-    function isAuthenticated(req, res, next) {
-      return req.isAuthenticated() ? next() : res.redirect("/auth/google");
-    }
-
-    // this.instance.use(
-    //   "/graphql",
-    //   isAuthenticated,
-    //   graphqlHTTP(req => ({
-    //     schema,
-    //     graphiql: true,
-    //     context: req
-    //   }))
-
-    gqlServer.applyMiddleware({ app: this.instance });
+    apollo.applyMiddleware({ app: this.instance });
 
     // handle requests that miss end points above
     this.errorHandlingEndware();
@@ -227,21 +217,21 @@ export default class Server {
   }
 
   /**
-   * Starts listening to the server on `process.env.PORT` or `3000`.
+   * Starts listening to the server on `4000`.
    * *DEVELOPMENT ONLY*
    */
   private startListening(): void {
-    this.instance.listen(this.PORT, () => {
-      const uri: string = `http://localhost:${this.PORT}`;
-
+    this.server.listen(this.config.port, () =>
       prettyLogger(
         "log",
         "Listening on:",
-        `  - ${chalk.greenBright(uri)}`,
-        "             AND",
-        `  - ${chalk.greenBright(uri)}${gqlServer.graphqlPath}`
-      );
-    });
+        `  - ${chalk.greenBright(
+          `http${this.config.ssl ? "s" : ""}://${this.config.hostname}:${
+            this.config.port
+          }${apollo.graphqlPath}`
+        )}`
+      )
+    );
   }
 
   /**
@@ -294,7 +284,7 @@ export default class Server {
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
     this.instance
-      .use(express.static(path.join(__dirname, ...rootDir)))
+      .use(express.static(path.join(__dirname, ...rootDir))) // ! <--------------
       .use((req, res, next) =>
         path.extname(req.path).length
           ? next(new Error("404 - Not found"))

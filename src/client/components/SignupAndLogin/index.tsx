@@ -1,29 +1,21 @@
 import { ApolloQueryResult } from "apollo-client";
 import _ from "lodash";
 import React, { Component } from "react";
-import {
-  ApolloConsumer,
-  Mutation,
-  MutationFn,
-  OperationVariables
-} from "react-apollo";
+import { MutationFn, OperationVariables } from "react-apollo";
 
 import "./signupAndLogin.css";
 
 import { User } from "../../../server/db";
-import { LOGIN, SIGNUP } from "../../queries";
+import { LOGIN } from "../../queries";
 import Form from "./Form";
 
 interface ISignupAndLoginProps {
   formType: "Signup" | "Login";
 }
 
-export interface ISignupState {
+export interface IConfirmFields {
   confirmEmail: string;
   confirmPassword: string;
-  email: string;
-  password: string;
-  username: string;
 }
 
 export interface ILoginState {
@@ -32,12 +24,14 @@ export interface ILoginState {
   username: string;
 }
 
+export type ISignupState = ILoginState & IConfirmFields;
+
 /**
  * THIS IS WHERE THE BOI STARTS
  */
 export default class SignupAndLogin extends Component<
   ISignupAndLoginProps,
-  ISignupState | ILoginState
+  ISignupState
 > {
   /**
    * `Signup` form is displayed by default.
@@ -48,84 +42,43 @@ export default class SignupAndLogin extends Component<
 
   constructor(props: ISignupAndLoginProps) {
     super(props);
-    this.state =
-      this.props.formType === "Signup"
-        ? ({
-            confirmEmail: "",
-            confirmPassword: "",
-            email: "",
-            password: "",
-            username: ""
-          } as Readonly<ISignupState>)
-        : ({
-            email: "",
-            password: "",
-            username: ""
-          } as Readonly<ILoginState>);
+    // ! same state is being used no matter what---
+    this.state = {
+      confirmEmail: "",
+      confirmPassword: "",
+      email: "",
+      password: "",
+      username: ""
+    };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   public render() {
-    const { formType } = this.props;
-
-    return formType === "Signup" ? (
-      <Mutation mutation={SIGNUP}>
-        {(signup, { data }) => (
-          <form
-            onSubmit={() => {
-              event.preventDefault();
-              this.handleSubmit(signup);
-            }}
-          >
-            <Form
-              formType="Signup"
-              handleChange={this.handleChange}
-              user={this.state}
-            />
-          </form>
-        )}
-      </Mutation>
-    ) : (
-      <ApolloConsumer>
-        {client => (
-          <form
-            onSubmit={() => {
-              event.preventDefault();
-              this.handleSubmit(null, client.query);
-            }}
-          >
-            <Form
-              formType="Login"
-              handleChange={this.handleChange}
-              user={this.state}
-            />
-          </form>
-        )}
-      </ApolloConsumer>
+    console.log(this.state);
+    return (
+      <Form
+        formType={this.props.formType}
+        handleChange={this.handleChange}
+        handleSubmit={this.handleSubmit}
+        user={this.state}
+      />
     );
   }
 
-  private handleChange(
-    key: keyof ILoginState | keyof ISignupState,
-    value: string
-  ): void {
-    this.setState({ [key]: value } as
-      | Pick<ISignupState, keyof ISignupState>
-      | Pick<ILoginState, keyof ILoginState>);
-
-    // debounce validation
+  private handleChange(key: keyof ISignupState, value: string): void {
+    console.log("WHYYYY");
+    this.setState({ [key]: value } as Pick<ISignupState, keyof ISignupState>);
   }
 
   /**
    * Handles submitting new user / login to backend
    */
   private handleSubmit(
-    // ! formerly: MutationFn<any, OperationVariables>
     signup?: MutationFn<OperationVariables>,
     login?: ({}) => Promise<ApolloQueryResult<User["id"]>>
   ): void {
-    const newUser = {
+    const newUser: ILoginState = {
       email: this.state.email,
       password: this.state.password,
       username: this.state.username

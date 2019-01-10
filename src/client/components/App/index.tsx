@@ -55,14 +55,15 @@ class App extends Component<{}, IState> {
       <Provider store={rootStore}>
         <ApolloProvider client={this.gqlClient}>
           <div>
-            <SignupAndLogin
-              formType={this.state.isSignup ? "Signup" : "Login"}
-            />
             <button
               onClick={() => this.setState({ isSignup: !this.state.isSignup })}
             >
               {this.state.isSignup ? "Login" : "Signup"}
             </button>
+            <hr />
+            <SignupAndLogin
+              formType={this.state.isSignup ? "Signup" : "Login"}
+            />
           </div>
           {/* <UserInfo formType={this.state.isSignup ? "Signup" : "Login"} /> */}
         </ApolloProvider>

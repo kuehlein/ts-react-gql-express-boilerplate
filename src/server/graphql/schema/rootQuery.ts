@@ -12,7 +12,7 @@ export const typeDef: DocumentNode = gql`
     """
     Queries a single user given an email
     """
-    user(email: String): ID!
+    user(id: String): User!
     logout(id: ID!): User!
   }
 `;
@@ -20,12 +20,20 @@ export const typeDef: DocumentNode = gql`
 // Provide resolver functions for your schema fields
 export const resolver: IResolvers = {
   Query: {
-    logout: (parent, args, { req }: IContext) =>
-      logout(req) ? args.id : "user is not authenticated",
-    user: async (parent, { email }, context, info) =>
+    logout: async (parent, args, { req }: IContext): Promise<User["id"]> => {
+      console.log(req.session);
+      console.log("WHY");
+      const x = (await logout(req)) ? args.id : "user is not authenticated";
+      console.log("logout ---------->", args.id);
+      return args.id;
+    },
+    user: async (parent, { id }, context, info) =>
       await getRepository(User)
-        .findOne({ where: { email } })
-        .then(user => user.id)
+        .findOne({ where: { id } })
+        .then(user => ({
+          createdAt: user.createdAt,
+          email: user.email
+        }))
         .catch(err => err.messsage)
   }
 };
