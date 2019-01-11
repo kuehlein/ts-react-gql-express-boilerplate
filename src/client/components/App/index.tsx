@@ -12,7 +12,7 @@ import "./app.css";
 
 // import Routes from './routes'
 
-import { SignupAndLogin, UserInfo } from "../";
+import { Navbar, SignupAndLogin, UserInfo } from "../";
 
 // If you use React Router, make this component
 // render <Router> with your routes. Currently,
@@ -21,8 +21,8 @@ import { SignupAndLogin, UserInfo } from "../";
 // You can ignore this warning. For details, see:
 // https://github.com/reactjs/react-router/issues/2182
 
-interface IState {
-  isSignup: boolean;
+interface IAppState {
+  formType: "Signup" | "Login";
 }
 
 /**
@@ -31,7 +31,7 @@ interface IState {
  * The `Provider` for the Redux store, the `Provider` for the GraphQL Client,
  * and the React Router `routes` are applied to the app here.
  */
-class App extends Component<{}, IState> {
+class App extends Component<{}, IAppState> {
   /**
    * The instance of the GraphQL Apollo Client.
    */
@@ -46,8 +46,9 @@ class App extends Component<{}, IState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      isSignup: true
+      formType: "Signup"
     };
+    this.handleClick = this.handleClick.bind(this);
   }
 
   public render() {
@@ -55,20 +56,23 @@ class App extends Component<{}, IState> {
       <Provider store={rootStore}>
         <ApolloProvider client={this.gqlClient}>
           <div>
-            <button
-              onClick={() => this.setState({ isSignup: !this.state.isSignup })}
-            >
-              {this.state.isSignup ? "Login" : "Signup"}
-            </button>
-            <hr />
-            <SignupAndLogin
-              formType={this.state.isSignup ? "Signup" : "Login"}
+            <Navbar
+              formType={this.state.formType}
+              handleClick={this.handleClick}
             />
+            <hr />
+            <SignupAndLogin formType={this.state.formType} />
           </div>
           {/* <UserInfo formType={this.state.isSignup ? "Signup" : "Login"} /> */}
         </ApolloProvider>
       </Provider>
     );
+  }
+
+  public handleClick(type: IAppState["formType"]) {
+    if (this.state.formType !== type) {
+      this.setState({ formType: type });
+    }
   }
 }
 

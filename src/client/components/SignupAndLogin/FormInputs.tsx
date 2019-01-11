@@ -1,56 +1,91 @@
 import _ from "lodash";
 import React, { SFC } from "react";
 
-import { IConfirmFields, ILoginState, ISignupState } from ".";
 import { isEmail } from "../../../utils";
+import { IFormInputsProps, ILoginState, ISignupState } from "./types";
 
 /**
- * Utility function to check for a valid input.
+ * Utility function to check for a valid input for email,
+ * username and password.
  */
-const checkForValidInput = (user: ISignupState, key: keyof ILoginState) => {
+const checkForValidInput = (
+  user: ISignupState,
+  key: keyof ILoginState,
+  formType?: "Signup" | "Login"
+) => {
+  if (!user[key] || formType === "Login") return true;
   if (key === "email") return isEmail(user.email);
+  // ! make it more complex later vvv
   if (key === "username") return user.username.length > 3;
-  // ! make it more complex later
   if (key === "password") return user.password.length > 7;
+  // ! make it more complex later ^^^
 };
 
-export interface IFormInputsProps {
-  handleChange: (key: keyof ISignupState, value: string) => void;
-  field?: keyof ILoginState | keyof IConfirmFields;
-  user: ISignupState;
+interface IDynamicLoginInputs extends IFormInputsProps {
+  formType?: "Signup" | "Login";
 }
 
-const FieldPrompt: SFC<IFormInputsProps> = ({ user, handleChange, field }) => {
-  const fieldLabel = _.startCase(field);
+/**
+ * Individual field for `Signup` or `Login`. Validates input, and updates state.
+ */
+const FieldPrompt: SFC<IDynamicLoginInputs> = ({
+  field,
+  formType,
+  handleChange,
+  user
+}) => {
+  const fieldLabel =
+    formType === "Login" && field === "username"
+      ? "username/email"
+      : _.startCase(field);
+
   return (
     <label htmlFor="input">
       {fieldLabel}
       <input
         className={
-          // if valid || empty => true : false
-          checkForValidInput(user, field as keyof ILoginState) || !user[field]
+          checkForValidInput(user, field as keyof ILoginState, formType)
             ? ""
             : "invalid-field"
         }
         onChange={e => handleChange(field, e.target.value)}
         placeholder={fieldLabel}
         required
+        spellCheck={false}
         type={field === "password" ? "password" : "text"}
       />
     </label>
   );
 };
 
-const FormInputs: SFC<IFormInputsProps> = ({ handleChange, user }) => (
+/**
+ * Template for `Login` input fields.
+ */
+const FormInputs: SFC<IDynamicLoginInputs> = ({
+  formType,
+  handleChange,
+  user
+}) => (
   <div style={{ display: "flex", flexDirection: "column" }}>
-    <FieldPrompt user={user} handleChange={handleChange} field={"email"} />
-    <FieldPrompt user={user} handleChange={handleChange} field={"password"} />
-    <FieldPrompt user={user} handleChange={handleChange} field={"username"} />
+    <FieldPrompt
+      field={"username"}
+      formType={formType}
+      handleChange={handleChange}
+      user={user}
+    />
+    {formType === "Signup" && (
+      <FieldPrompt field={"email"} handleChange={handleChange} user={user} />
+    )}
+    <FieldPrompt
+      field={"password"}
+      formType={formType}
+      handleChange={handleChange}
+      user={user}
+    />
   </div>
 );
 
 const defaultProps = {
-  formType: "Signup",
   handleChange: () => {},
   user: {
     confirmEmail: "",

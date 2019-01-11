@@ -1,8 +1,12 @@
 import _ from "lodash";
 import React, { SFC } from "react";
 
-import { IConfirmFields, ILoginState, ISignupState } from "./";
-import { IFormInputsProps } from "./FormInputs";
+import {
+  IConfirmFields,
+  IFormInputsProps,
+  ILoginState,
+  ISignupState
+} from "./types";
 
 /**
  * Utility function to check two fields for equality.
@@ -13,6 +17,9 @@ const checkForValidConfirmationInput = (
   key2: keyof ILoginState
 ): string => (user[key1] === user[key2] ? "" : "invalid-field");
 
+/**
+ * Individual field for `Signup` confirmation. Validates input, and updates state.
+ */
 const FieldConfirm: SFC<IFormInputsProps> = ({ user, handleChange, field }) => {
   const fieldLabel = _.startCase(field);
 
@@ -20,12 +27,6 @@ const FieldConfirm: SFC<IFormInputsProps> = ({ user, handleChange, field }) => {
   const counterpart = fieldLabel
     .split(" ")[1]
     .toLowerCase() as keyof ILoginState;
-
-  // const debouncedHandleChange = _.debounce(handleChange, 300);
-
-  // const eventHandler = (value: string) => {
-  //   debouncedHandleChange(field, value);
-  // };
 
   return (
     <label htmlFor="input">
@@ -43,12 +44,16 @@ const FieldConfirm: SFC<IFormInputsProps> = ({ user, handleChange, field }) => {
         onChange={e => handleChange(field, e.target.value)}
         placeholder={fieldLabel}
         required
+        spellCheck={false}
         type={field === "confirmPassword" ? "password" : "text"}
       />
     </label>
   );
 };
 
+/**
+ * Template for `Signup` confirmation input fields.
+ */
 const ConfirmInputs: SFC<IFormInputsProps> = ({ handleChange, user }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>

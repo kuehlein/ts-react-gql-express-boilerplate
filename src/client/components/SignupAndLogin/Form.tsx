@@ -12,9 +12,11 @@ import { User } from "../../../server/db";
 import { SIGNUP } from "../../queries";
 import ConfirmInputs from "./ConfirmInputs";
 import FormInputs from "./FormInputs";
-import { ISignupState } from "./index";
+import { ISignupState } from "./types";
 
-// ApolloConsumer: React.FunctionComponent<ApolloConsumerProps>
+/**
+ * Props recievied from `SignupAndLogin`, and passed down to input components.
+ */
 interface IFormProps {
   formType: "Signup" | "Login";
   handleChange: (key: keyof ISignupState, value: string) => void;
@@ -25,7 +27,10 @@ interface IFormProps {
   user: ISignupState;
 }
 
-// chooses query or mutation
+/**
+ * Template for `SignupAndLogin` form based on whether the state is
+ * currently `Signup` or `Login`.
+ */
 const Form: SFC<IFormProps> = ({
   formType,
   handleChange,
@@ -47,7 +52,11 @@ const Form: SFC<IFormProps> = ({
         >
           <h2>{formType}</h2>
           <div style={{ display: "flex" }}>
-            <FormInputs handleChange={eventHandler} user={user} />
+            <FormInputs
+              formType={formType}
+              handleChange={eventHandler}
+              user={user}
+            />
             <ConfirmInputs handleChange={eventHandler} user={user} />
           </div>
           <button type="Submit">{formType}</button>
@@ -65,7 +74,11 @@ const Form: SFC<IFormProps> = ({
         >
           <h2>{formType}</h2>
           <div style={{ display: "flex" }}>
-            <FormInputs handleChange={handleChange} user={user} />
+            <FormInputs
+              formType={formType}
+              handleChange={handleChange}
+              user={user}
+            />
           </div>
           <button type="Submit">{formType}</button>
         </form>
