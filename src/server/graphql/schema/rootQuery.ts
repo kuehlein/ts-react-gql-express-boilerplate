@@ -20,13 +20,8 @@ export const typeDef: DocumentNode = gql`
 // Provide resolver functions for your schema fields
 export const resolver: IResolvers = {
   Query: {
-    logout: async (parent, args, { req }: IContext): Promise<User["id"]> => {
-      console.log(req.session);
-      console.log("WHY");
-      const x = (await logout(req)) ? args.id : "user is not authenticated";
-      console.log("logout ---------->", args.id);
-      return args.id;
-    },
+    logout: async (parent, args, { req }: IContext): Promise<User["id"]> =>
+      (await logout(req)) ? args.id : "user is not authenticated",
     user: async (parent, { id }, context, info) =>
       await getRepository(User)
         .findOne({ where: { id } })

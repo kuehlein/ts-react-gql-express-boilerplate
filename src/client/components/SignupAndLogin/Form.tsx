@@ -43,32 +43,38 @@ const Form: SFC<IFormProps> = ({
 
   return formType === "Signup" ? (
     <Mutation mutation={SIGNUP}>
-      {signup => (
-        <form
-          onSubmit={() => {
-            event.preventDefault();
-            handleSubmit(signup);
-          }}
-        >
-          <h2>{formType}</h2>
-          <div style={{ display: "flex" }}>
-            <FormInputs
-              formType={formType}
-              handleChange={eventHandler}
-              user={user}
-            />
-            <ConfirmInputs handleChange={eventHandler} user={user} />
-          </div>
-          <button type="Submit">{formType}</button>
-        </form>
+      {(signup, { loading, error }) => (
+        <>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              handleSubmit(signup);
+            }}
+          >
+            <h2>{formType}</h2>
+            <div style={{ display: "flex" }}>
+              <FormInputs
+                formType={formType}
+                handleChange={eventHandler}
+                user={user}
+              />
+              <ConfirmInputs handleChange={eventHandler} user={user} />
+            </div>
+            <button type="Submit">{formType}</button>
+          </form>
+          {loading && <p>Loading...</p>}
+          {error && (
+            <p>Error :( Please try again {JSON.stringify(error, null, 2)}</p>
+          )}
+        </>
       )}
     </Mutation>
   ) : (
     <ApolloConsumer>
       {client => (
         <form
-          onSubmit={() => {
-            event.preventDefault();
+          onSubmit={e => {
+            e.preventDefault();
             handleSubmit(null, client.query);
           }}
         >

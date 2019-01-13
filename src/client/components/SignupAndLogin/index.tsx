@@ -6,7 +6,7 @@ import { MutationFn, OperationVariables } from "react-apollo";
 import "./signupAndLogin.css";
 
 import { User } from "../../../server/db";
-import { LOGIN } from "../../queries";
+import { LOGIN, SIGNUP } from "../../queries";
 import Form from "./Form";
 import { ILoginState, ISignupAndLoginProps, ISignupState } from "./types.d";
 
@@ -82,12 +82,19 @@ export default class SignupAndLogin extends Component<
       newUser.email = this.state.email;
     }
 
-    if (signup) signup({ variables: newUser });
-    else {
+    if (signup) {
+      signup({
+        variables: newUser
+      })
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
+    } else {
       login({
         query: LOGIN,
         variables: newUser
-      });
+      })
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
     }
 
     this.setState(this.baseState);

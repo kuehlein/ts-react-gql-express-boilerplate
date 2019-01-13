@@ -1,21 +1,21 @@
 import { ApolloServer } from "apollo-server-express";
+import { Connection } from "typeorm";
 
 import { IContext } from "../server.d";
 import { resolvers, typeDefs } from "./schema";
 
-const apollo = new ApolloServer({
-  context: ({ req }: IContext) => {
-    // get the user token from the headers
-    const token = req.headers.authorization || "";
+const apollo = (dbConnection?: Connection): ApolloServer =>
+  new ApolloServer({
+    context: async ({ req }: IContext): Promise<ApolloServer["context"]> => {
+      // https://www.apollographql.com/docs/apollo-server/v2/features/authentication.html
 
-    // try to retrieve a user with the token
-    // const user = getUser(token); // ! i make this?
+      const user = req.isAuthenticated() ? req.user : false;
 
-    // add the user to the context
-    return { req };
-  },
-  resolvers,
-  typeDefs
-});
+      // add the user to the context
+      return { dbConnection, req, user };
+    },
+    resolvers,
+    typeDefs
+  });
 
 export default apollo;

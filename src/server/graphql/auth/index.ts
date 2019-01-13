@@ -6,38 +6,33 @@ import { ISignupAndLogin } from "../../../typings";
 import { isEmail } from "../../../utils";
 import { User } from "../../db";
 
+// ! https://www.apollographql.com/docs/apollo-server/v2/features/authentication.html
+
 // passport local strategy
 passport.use(
-  new Strategy(
-    {
-      passReqToCallback: true,
-      usernameField: "emailOrUsername"
-    },
-    async (req, emailOrUsername, password, done) => {
-      let key: "email" | "username";
-      if (isEmail(emailOrUsername)) {
-        key = "email";
-        emailOrUsername = emailOrUsername.toLowerCase();
-      } else {
-        key = "username";
-      }
-
-      await User.findOne({ [key]: emailOrUsername })
-        .then(user => {
-          if (!user) {
-            return done(null, false, { message: `Incorrect ${key}.` });
-          }
-          if (!user.isValidPassword(password)) {
-            return done(null, false, { message: "Incorrect password." });
-          }
-          return done(null, user);
-        })
-        .catch(err => {
-          console.log("we are here???", JSON.stringify(err, null, 2));
-          return done(err);
-        });
+  new Strategy(async (emailOrUsername, password, done) => {
+    let key: "email" | "username";
+    if (isEmail(emailOrUsername)) {
+      key = "email";
+      emailOrUsername = emailOrUsername.toLowerCase();
+    } else {
+      key = "username";
     }
-  )
+
+    await User.findOne({ [key]: emailOrUsername })
+      .then(user => {
+        if (!user) {
+          return done(null, false, { message: `Incorrect ${key}.` });
+        }
+        if (!user.isValidPassword(password)) {
+          return done(null, false, { message: "Incorrect password." });
+        }
+        return done(null, user);
+      })
+      .catch(err => {
+        return done(err);
+      });
+  })
 );
 
 /**
@@ -49,7 +44,7 @@ export const signup = async (
   user: ISignupAndLogin
 ) /* : Promise<User | void> */ => {
   if (!user.email || !user.username || !user.password) {
-    throw new Error("You must provide an email and password.");
+    throw new Error("You must provide an email, username and password.");
   }
 
   const createdUser = new User();
@@ -62,9 +57,7 @@ export const signup = async (
       passport.authenticate(
         "local",
         (err: any, serializedUser: User, info: any) => {
-          // if (err) throw new Error(err);
           if (err) reject(err);
-          // return req.login(serializedUser, (err: any) => {
 
           req.login(serializedUser, (err: any) => {
             if (err) reject(err);
@@ -73,14 +66,16 @@ export const signup = async (
         }
       )(
         (() => {
-          req.body.emailOrUsername = savedUser.username || savedUser.email;
+          req.body.username = savedUser.username || savedUser.email;
           req.body.password = savedUser.password;
           return req;
         })()
       );
     })
       .then(userBoi => {
-        console.log(req.session);
+        // console.log(req.session);
+        // console.log(req.sessionID);
+        // console.log(req.user);
         return userBoi;
       })
       .catch(err =>
@@ -108,6 +103,8 @@ export const login = async (
  * Logs out the currently logged in user, and destroys the session.
  */
 export const logout = (req: Request): boolean => {
+  // console.log(req.session);
+  // console.log(req.sessionID);
   const authd = req.isAuthenticated();
   console.log("req.isAuthenticated()---------", authd);
   console.log("req.user---(before logout)----", req.user);

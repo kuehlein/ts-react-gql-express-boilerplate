@@ -38,11 +38,7 @@ export const resolver: IResolvers = {
       parent,
       { email, password, username }: ISignupAndLogin,
       { req }: IContext
-    ) => {
-      const user = await signup(req, { email, password, username });
-
-      return user;
-    }
+    ) => await signup(req, { email, password, username })
   },
   // Query: {
   //   login: (parent, { email, password, username }, { req }: IContext) =>

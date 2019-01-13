@@ -20,5 +20,5 @@
     "target": "es5"
   },
   "exclude": ["../node_modules", "**/*.spec.ts"],
-  "files": ["./src/server/index.ts", "./src/server/db/entities/User.ts"]
+  "files": ["./src/server/index.ts"]
 }

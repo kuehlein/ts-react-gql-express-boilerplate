@@ -2,7 +2,6 @@ import bodyParser from "body-parser";
 import chalk from "chalk";
 import compression from "compression";
 import SessionStore from "connect-pg-simple";
-import cookieParser from "cookie-parser";
 import express, { Application, NextFunction, Request, Response } from "express";
 import session from "express-session";
 import fs from "fs";
@@ -11,7 +10,7 @@ import https from "https";
 import morgan from "morgan";
 import passport from "passport";
 import path from "path";
-import { getConnection } from "typeorm";
+import { Connection, getConnection } from "typeorm";
 import webpack, { Compiler } from "webpack";
 import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
@@ -75,7 +74,7 @@ export default class Server {
    */
   public createAppDev(): void {
     this.syncDb()
-      .then(() => this.applyMiddleware())
+      .then(dbConnection => this.applyMiddleware(dbConnection))
       .then(() => this.startListening())
       .then(() => this.HMR === "enabled" && this.webpackDevMiddleware())
       .then(() => this.staticallyServeFiles())
@@ -87,7 +86,7 @@ export default class Server {
    */
   public createAppProd(): void {
     this.syncDb()
-      .then(() => this.applyMiddleware())
+      .then(dbConnection => this.applyMiddleware(dbConnection))
       .then(() => this.staticallyServeFiles())
       .catch(err => console.log(err));
   }
@@ -95,36 +94,35 @@ export default class Server {
   /**
    * Syncs the database to begin the creation of the server.
    */
-  private async syncDb(): Promise<void> {
-    const db = getConnection();
-    if (db.isConnected === false) {
-      await db.connect().catch(err => console.log(err));
+  private async syncDb(): Promise<Connection> {
+    const dbConnection = getConnection();
+    if (dbConnection.isConnected === false) {
+      await dbConnection.connect().catch(err => console.log(err));
     }
+    return dbConnection;
   }
 
   /**
    * Creates the body of the server. Logging middleware (`morgan`),
-   * body parsing middleware (`bodyParser`), compression middleware
-   * (`compression`), as well as session, passport, auth and
-   * the graphql api are applied here.
+   * body and cookie parsing middleware (`bodyParser`, `cookieParser`),
+   * compression middleware (`compression`), as well as
+   * session, passport, auth and the graphql api are applied here.
    */
-  private applyMiddleware(): void {
-    // this.instance.use((req, res, next) => {
-    //   res.set({
-    //     "Access-Control-Allow-Credentials": true,
-    //     "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    //     "Access-Control-Allow-Methods": "DELETE,GET,PATCH,POST,PUT",
-    //     "Access-Control-Allow-Origin": "*"
-    //   });
+  private applyMiddleware(dbConnection: Connection): void {
+    // ! ???????
+    this.instance.use((req, res, next) => {
+      res.set({
+        "Access-Control-Allow-Credentials": true,
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Methods": "DELETE,GET,PATCH,POST,PUT",
+        "Access-Control-Allow-Origin": "*"
+      });
 
-    //   next();
-    // });
+      next();
+    });
 
     // logging middleware
     this.instance.use(morgan("dev"));
-
-    // cookie parsing middleware
-    this.instance.use(cookieParser());
 
     // body parsing middleware
     this.instance.use(bodyParser.json());
@@ -134,19 +132,25 @@ export default class Server {
     this.instance.use(compression());
 
     this.sessionAndPassport();
-    this.graphql();
+    this.graphql(dbConnection);
   }
 
   /**
    * Creates an express session and initialized passport with the session.
    */
   private sessionAndPassport(): void {
+    this.instance.set("trust proxy", this.config.ssl);
+
     // session middleware with passport
     this.instance.use(
       session({
-        cookie: { secure: false, maxAge: 4 * 60 * 60 * 1000 },
+        cookie: {
+          maxAge: 4 * 60 * 60 * 1000,
+          secure: this.config.ssl
+        },
+        proxy: this.config.ssl,
         resave: false,
-        saveUninitialized: false,
+        saveUninitialized: true, // false???
         secret:
           process.env.SESSION_SECRET ||
           "Peeps. Stand up to hard ware and step into style.",
@@ -168,14 +172,14 @@ export default class Server {
     // passport registration
     passport.serializeUser(
       (user: User, done): void => {
-        console.log("WAHT WHY serialize user");
+        console.log("serialize user", user);
         return done(null, user.id);
       }
     );
     passport.deserializeUser(
       async (id: string, done): Promise<void> => {
         try {
-          console.log("WAH");
+          console.log("deserialize user");
           const user = await User.findOne({ id });
           done(null, user);
         } catch (err) {
@@ -188,8 +192,18 @@ export default class Server {
   /**
    * Route to graphql api.
    */
-  private graphql(): void {
-    apollo.applyMiddleware({ app: this.instance });
+  private graphql(dbConnection: Connection): void {
+    // * passes dbConnection to ApolloServer to add to context
+    apollo(dbConnection).applyMiddleware({
+      app: this.instance,
+      // ! dont know about these vvv
+      cors: {
+        allowedHeaders: ["Authorization", "Content-Type"],
+        credentials: true,
+        methods: ["DELETE", "GET", "PATCH", "POST", "PUT"],
+        origin: "*"
+      }
+    });
 
     // handle requests that miss end points above
     this.errorHandlingEndware();
@@ -228,7 +242,7 @@ export default class Server {
         `  - ${chalk.greenBright(
           `http${this.config.ssl ? "s" : ""}://${this.config.hostname}:${
             this.config.port
-          }${apollo.graphqlPath}`
+          }${apollo().graphqlPath}`
         )}`
       )
     );
@@ -284,7 +298,7 @@ export default class Server {
 
     // static file-serving middleware then send 404 for the rest (.js, .css, etc.)
     this.instance
-      .use(express.static(path.join(__dirname, ...rootDir))) // ! <--------------
+      .use(express.static(path.join(__dirname, ...rootDir)))
       .use((req, res, next) =>
         path.extname(req.path).length
           ? next(new Error("404 - Not found"))

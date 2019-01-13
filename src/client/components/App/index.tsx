@@ -38,8 +38,10 @@ class App extends Component<{}, IAppState> {
   private gqlClient = new ApolloClient({
     cache: new InMemoryCache({ dataIdFromObject: object => object.id || null }),
     link: new HttpLink({
+      credentials: "include",
       includeExtensions: true,
-      useGETForQueries: true // ! ???
+      uri: "http://localhost:4000/graphql",
+      useGETForQueries: true
     })
   });
 

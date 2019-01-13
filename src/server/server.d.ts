@@ -1,11 +1,14 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { User } from "./db";
+import { Connection } from "typeorm";
 
 /**
  * GraphQL context object. Contains express `Request` object.
  */
 export interface IContext {
-  req: Request;
+  dbConnection?: Connection;
+  req?: Request;
+  user?: User | false;
 }
 
 /**
