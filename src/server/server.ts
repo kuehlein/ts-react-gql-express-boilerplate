@@ -15,11 +15,10 @@ import webpack, { Compiler } from "webpack";
 import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 
-import { ResponseError } from "./server.d";
-
 import config from "../webpack.dev.config";
 import { User } from "./db";
 import apollo from "./graphql";
+import { ResponseError } from "./types";
 import { prettyLogger } from "./utils";
 
 /**
@@ -110,16 +109,16 @@ export default class Server {
    */
   private applyMiddleware(dbConnection: Connection): void {
     // ! ???????
-    this.instance.use((req, res, next) => {
-      res.set({
-        "Access-Control-Allow-Credentials": true,
-        "Access-Control-Allow-Headers": "Content-Type,Authorization",
-        "Access-Control-Allow-Methods": "DELETE,GET,PATCH,POST,PUT",
-        "Access-Control-Allow-Origin": "*"
-      });
+    // this.instance.use((req, res, next) => {
+    //   res.set({
+    //     "Access-Control-Allow-Credentials": true,
+    //     "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    //     "Access-Control-Allow-Methods": "DELETE,GET,PATCH,POST,PUT",
+    //     "Access-Control-Allow-Origin": "*"
+    //   });
 
-      next();
-    });
+    //   next();
+    // });
 
     // logging middleware
     this.instance.use(morgan("dev"));
@@ -131,14 +130,14 @@ export default class Server {
     // compression middleware
     this.instance.use(compression());
 
-    this.sessionAndPassport();
+    this.sessionAndPassport(dbConnection);
     this.graphql(dbConnection);
   }
 
   /**
    * Creates an express session and initialized passport with the session.
    */
-  private sessionAndPassport(): void {
+  private sessionAndPassport(dbConnection: Connection): void {
     this.instance.set("trust proxy", this.config.ssl);
 
     // session middleware with passport
@@ -170,17 +169,11 @@ export default class Server {
     this.instance.use(passport.session());
 
     // passport registration
-    passport.serializeUser(
-      (user: User, done): void => {
-        console.log("serialize user", user);
-        return done(null, user.id);
-      }
-    );
+    passport.serializeUser((user: User, done): void => done(null, user.id));
     passport.deserializeUser(
       async (id: string, done): Promise<void> => {
         try {
-          console.log("deserialize user");
-          const user = await User.findOne({ id });
+          const user = await dbConnection.getRepository(User).findOne({ id });
           done(null, user);
         } catch (err) {
           done(err);

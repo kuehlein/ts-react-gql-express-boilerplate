@@ -128,11 +128,11 @@ export default class User extends BaseEntity {
    * Compare a candidate password with a user's hashed
    * password in constant time (to prevent timing attacks).
    */
-  public isValidPassword(encryptedCandidate: string): boolean {
-    // const encryptedCandidate: string = User.encryptPassword(
-    //   candidatePwd,
-    //   this.salt
-    // );
+  public isValidPassword(candidatePwd: string): boolean {
+    const encryptedCandidate: string = User.encryptPassword(
+      candidatePwd,
+      this.salt
+    );
 
     if (this.password.length !== encryptedCandidate.length) return false;
 

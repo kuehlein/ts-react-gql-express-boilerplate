@@ -1,34 +1,47 @@
 import { gql } from "apollo-server-express";
 import { IResolvers } from "apollo-server-express";
 import { DocumentNode } from "graphql";
-import { getRepository } from "typeorm";
+import _ from "lodash";
 
 import { User } from "../../db";
-import { IContext } from "../../server.d";
-import { logout } from "../auth";
+import { IContext } from "../../types";
 
 export const typeDef: DocumentNode = gql`
   type Query {
     """
     Queries a single user given an email
     """
-    user(id: String): User!
-    logout(id: ID!): User!
+    user(id: String, keys: [String!]): User!
+  }
+  type Mutation {
+    """
+    Dummy field since Mutation cannot be empty.
+    """
+    filler(str: String): ID!
   }
 `;
 
 // Provide resolver functions for your schema fields
 export const resolver: IResolvers = {
+  Mutation: {
+    filler: () => "this is filler"
+  },
   Query: {
-    logout: async (parent, args, { req }: IContext): Promise<User["id"]> =>
-      (await logout(req)) ? args.id : "user is not authenticated",
-    user: async (parent, { id }, context, info) =>
-      await getRepository(User)
+    user: async (
+      parent,
+      { id, keys }: IUserQuery,
+      { dbConnection }: IContext,
+      info
+    ): Promise<User> =>
+      await dbConnection
+        .getRepository(User)
         .findOne({ where: { id } })
-        .then(user => ({
-          createdAt: user.createdAt,
-          email: user.email
-        }))
+        .then(user => _.pick(user, keys))
         .catch(err => err.messsage)
   }
 };
+
+interface IUserQuery {
+  id: string;
+  keys: string[];
+}

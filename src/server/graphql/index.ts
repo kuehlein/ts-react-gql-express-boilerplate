@@ -1,7 +1,7 @@
 import { ApolloServer } from "apollo-server-express";
 import { Connection } from "typeorm";
 
-import { IContext } from "../server.d";
+import { IContext } from "../types";
 import { resolvers, typeDefs } from "./schema";
 
 const apollo = (dbConnection?: Connection): ApolloServer =>

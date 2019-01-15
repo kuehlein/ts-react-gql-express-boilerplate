@@ -2,36 +2,30 @@ import { Request } from "express";
 import passport from "passport";
 import { Strategy } from "passport-local";
 
-import { ISignupAndLogin } from "../../../typings";
-import { isEmail } from "../../../utils";
+import { ISignupAndLogin } from "../../../types";
 import { User } from "../../db";
+import { addUserToReq, checkEmailOrUsername } from "./utils";
 
 // ! https://www.apollographql.com/docs/apollo-server/v2/features/authentication.html
 
 // passport local strategy
 passport.use(
   new Strategy(async (emailOrUsername, password, done) => {
-    let key: "email" | "username";
-    if (isEmail(emailOrUsername)) {
-      key = "email";
-      emailOrUsername = emailOrUsername.toLowerCase();
-    } else {
-      key = "username";
-    }
+    const key = checkEmailOrUsername(emailOrUsername);
+    emailOrUsername =
+      key === "email" ? emailOrUsername.toLowerCase() : emailOrUsername;
 
     await User.findOne({ [key]: emailOrUsername })
       .then(user => {
         if (!user) {
-          return done(null, false, { message: `Incorrect ${key}.` });
+          return done(null, false, { message: "Incorrect username/email." });
         }
         if (!user.isValidPassword(password)) {
           return done(null, false, { message: "Incorrect password." });
         }
         return done(null, user);
       })
-      .catch(err => {
-        return done(err);
-      });
+      .catch(err => done(err));
   })
 );
 
@@ -42,7 +36,7 @@ passport.use(
 export const signup = async (
   req: Request,
   user: ISignupAndLogin
-) /* : Promise<User | void> */ => {
+): Promise<User> => {
   if (!user.email || !user.username || !user.password) {
     throw new Error("You must provide an email, username and password.");
   }
@@ -52,39 +46,13 @@ export const signup = async (
   createdUser.password = user.password;
   createdUser.username = user.username;
 
-  return createdUser.save().then((savedUser: User) /* : Promise<User> */ => {
-    return new Promise((resolve, reject) => {
-      passport.authenticate(
-        "local",
-        (err: any, serializedUser: User, info: any) => {
-          if (err) reject(err);
-
-          req.login(serializedUser, (err: any) => {
-            if (err) reject(err);
-            resolve(serializedUser);
-          });
-        }
-      )(
-        (() => {
-          req.body.username = savedUser.username || savedUser.email;
-          req.body.password = savedUser.password;
-          return req;
-        })()
-      );
-    })
-      .then(userBoi => {
-        // console.log(req.session);
-        // console.log(req.sessionID);
-        // console.log(req.user);
-        return userBoi;
-      })
-      .catch(err =>
-        console.log(
-          "\u001b[91;1mFailed to create a new user [graphql/auth/index --- signup]:\u001b[0m",
-          err
-        )
-      );
-  });
+  return (
+    createdUser
+      .save()
+      // * use original user arg
+      .then(newUser => login(req, newUser, user.password))
+      .catch(err => err.message)
+  );
 };
 
 /**
@@ -93,27 +61,33 @@ export const signup = async (
  * hence the strange syntax.
  */
 export const login = async (
-  email: User["email"],
-  password: User["password"],
-  username: User["username"],
-  req: Request
-) /* : Promise<User> */ => {};
+  req: Request,
+  user: ISignupAndLogin,
+  password?: string
+): Promise<User> => {
+  return new Promise((resolve, reject) => {
+    passport.authenticate(
+      "local",
+      (err: any, authenticatedUser: User, anotherThing) => {
+        if (err) reject(err);
+
+        req.login(authenticatedUser, (err: any) => {
+          if (err) reject(err);
+          resolve(authenticatedUser);
+        });
+      }
+    )(addUserToReq(req, user, password));
+  });
+};
 
 /**
  * Logs out the currently logged in user, and destroys the session.
  */
-export const logout = (req: Request): boolean => {
-  // console.log(req.session);
-  // console.log(req.sessionID);
-  const authd = req.isAuthenticated();
-  console.log("req.isAuthenticated()---------", authd);
-  console.log("req.user---(before logout)----", req.user);
-  // if (authd) {
+export const logout = (req: Request): string => {
   console.log("hit");
   req.logout();
   req.session.destroy(err => {
     if (err) console.log("Session was not destroyed", err);
   });
-  // }
-  return authd;
+  return "logged out???"; // ! ???
 };

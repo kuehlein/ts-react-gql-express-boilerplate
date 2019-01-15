@@ -1,4 +1,4 @@
-import { ISignupAndLogin } from "../../../typings";
+import { ISignupAndLogin } from "../../../types";
 
 export interface ISignupAndLoginConfirmation extends ISignupAndLogin {
   confirmEmail: string;

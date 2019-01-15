@@ -128,7 +128,6 @@ const runSeed = async (): Promise<void> => {
     await db.close();
     console.log("Db connection closed.");
   } catch (err) {
-    console.log("hit");
     console.log(err);
     // ! vvv not properly logging
     // prettyLogger("error", "\n" + JSON.stringify(err, null, 2));

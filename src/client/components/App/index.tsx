@@ -12,7 +12,7 @@ import "./app.css";
 
 // import Routes from './routes'
 
-import { Navbar, SignupAndLogin, UserInfo } from "../";
+import { Navbar, SignupAndLogin } from "../";
 
 // If you use React Router, make this component
 // render <Router> with your routes. Currently,

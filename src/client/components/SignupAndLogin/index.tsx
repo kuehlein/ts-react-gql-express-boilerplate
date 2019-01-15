@@ -6,7 +6,7 @@ import { MutationFn, OperationVariables } from "react-apollo";
 import "./signupAndLogin.css";
 
 import { User } from "../../../server/db";
-import { LOGIN, SIGNUP } from "../../queries";
+import { LOGIN } from "../../queries";
 import Form from "./Form";
 import { ILoginState, ISignupAndLoginProps, ISignupState } from "./types.d";
 
@@ -97,6 +97,7 @@ export default class SignupAndLogin extends Component<
         .catch(error => console.error(error));
     }
 
+    // ! since fields arent controlled, they arent being cleared
     this.setState(this.baseState);
   }
 }

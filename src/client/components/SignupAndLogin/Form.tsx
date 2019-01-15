@@ -63,9 +63,7 @@ const Form: SFC<IFormProps> = ({
             <button type="Submit">{formType}</button>
           </form>
           {loading && <p>Loading...</p>}
-          {error && (
-            <p>Error :( Please try again {JSON.stringify(error, null, 2)}</p>
-          )}
+          {error && <p>Error :( Please try again</p>}
         </>
       )}
     </Mutation>
