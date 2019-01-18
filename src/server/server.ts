@@ -41,6 +41,9 @@ export default class Server {
   private config: { ssl: boolean; port: number; hostname: string };
   private server: http.Server | https.Server;
   private NODE_ENV: string = process.env.NODE_ENV || "production";
+  private SECRET: string =
+    process.env.SESSION_SECRET ||
+    "Peeps. Stand up to hard ware and step into style.";
 
   /**
    * If `enabled`, Hot Module Replacement is active. Enable *FOR DEVELOPMENT ONLY*
@@ -103,22 +106,21 @@ export default class Server {
 
   /**
    * Creates the body of the server. Logging middleware (`morgan`),
-   * body and cookie parsing middleware (`bodyParser`, `cookieParser`),
+   * body parsing middleware (`bodyParser`),
    * compression middleware (`compression`), as well as
    * session, passport, auth and the graphql api are applied here.
    */
   private applyMiddleware(dbConnection: Connection): void {
-    // ! ???????
-    // this.instance.use((req, res, next) => {
-    //   res.set({
-    //     "Access-Control-Allow-Credentials": true,
-    //     "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    //     "Access-Control-Allow-Methods": "DELETE,GET,PATCH,POST,PUT",
-    //     "Access-Control-Allow-Origin": "*"
-    //   });
+    this.instance.use((req, res, next) => {
+      res.set({
+        "Access-Control-Allow-Credentials": "same-origin",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Methods": "DELETE,GET,PATCH,POST,PUT",
+        "Access-Control-Allow-Origin": this.config.hostname
+      });
 
-    //   next();
-    // });
+      next();
+    });
 
     // logging middleware
     this.instance.use(morgan("dev"));
@@ -138,21 +140,20 @@ export default class Server {
    * Creates an express session and initialized passport with the session.
    */
   private sessionAndPassport(dbConnection: Connection): void {
-    this.instance.set("trust proxy", this.config.ssl);
-
     // session middleware with passport
     this.instance.use(
       session({
         cookie: {
+          httpOnly: false,
           maxAge: 4 * 60 * 60 * 1000,
+          path: "/", // ! ???
           secure: this.config.ssl
         },
         proxy: this.config.ssl,
-        resave: false,
-        saveUninitialized: true, // false???
-        secret:
-          process.env.SESSION_SECRET ||
-          "Peeps. Stand up to hard ware and step into style.",
+        resave: false, // ! ???
+        rolling: true, // ! ???
+        saveUninitialized: false,
+        secret: this.SECRET,
         store: new (SessionStore(session))({
           conObject: {
             database: "ts_react_gql_express_boilerplate",
@@ -189,12 +190,11 @@ export default class Server {
     // * passes dbConnection to ApolloServer to add to context
     apollo(dbConnection).applyMiddleware({
       app: this.instance,
-      // ! dont know about these vvv
       cors: {
         allowedHeaders: ["Authorization", "Content-Type"],
         credentials: true,
         methods: ["DELETE", "GET", "PATCH", "POST", "PUT"],
-        origin: "*"
+        origin: this.config.hostname
       }
     });
 

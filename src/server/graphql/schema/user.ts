@@ -24,7 +24,7 @@ export const typeDef: DocumentNode = gql`
   }
   extend type Query {
     login(email: String, username: String, password: String!): User!
-    logout(id: ID!): User!
+    logout: User!
     # me(): User!
   }
   extend type Mutation {
@@ -43,12 +43,10 @@ export const resolver: IResolvers = {
   Query: {
     login: async (parent, args, { req }: IContext): Promise<User> =>
       await login(req, args as ISignupAndLogin),
-    logout: async (
-      parent,
-      args,
-      { req, user }: IContext
-    ): Promise<User["id"]> =>
-      user ? await logout(req) : "user is not authenticated"
+    logout: async (parent, args, { req, user }: IContext): Promise<User> => {
+      if (user) return await logout(req);
+      // ! how to handle no user??
+    }
     // me: (parent, args, { req }: IContext) => JSON.stringify(req.user),
   }
 };

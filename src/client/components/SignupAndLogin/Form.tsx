@@ -1,4 +1,4 @@
-import { ApolloQueryResult } from "apollo-client";
+import { ApolloClient } from "apollo-client";
 import _ from "lodash";
 import React, { SFC } from "react";
 import {
@@ -7,22 +7,22 @@ import {
   MutationFn,
   OperationVariables
 } from "react-apollo";
+import { hot } from "react-hot-loader";
 
-import { User } from "../../../server/db";
 import { SIGNUP } from "../../queries";
 import ConfirmInputs from "./ConfirmInputs";
 import FormInputs from "./FormInputs";
-import { ISignupState } from "./types";
+import { ISignupAndLoginProps, ISignupState } from "./types";
 
 /**
  * Props recievied from `SignupAndLogin`, and passed down to input components.
  */
 interface IFormProps {
-  formType: "Signup" | "Login";
+  formType: ISignupAndLoginProps["formType"];
   handleChange: (key: keyof ISignupState, value: string) => void;
   handleSubmit: (
     signup?: MutationFn<OperationVariables>,
-    login?: ({}) => Promise<ApolloQueryResult<User["id"]>>
+    client?: ApolloClient<any>
   ) => void;
   user: ISignupState;
 }
@@ -73,7 +73,7 @@ const Form: SFC<IFormProps> = ({
         <form
           onSubmit={e => {
             e.preventDefault();
-            handleSubmit(null, client.query);
+            handleSubmit(null, client);
           }}
         >
           <h2>{formType}</h2>
@@ -104,4 +104,4 @@ Form.defaultProps = {
   }
 };
 
-export default Form;
+export default hot(module)(Form);

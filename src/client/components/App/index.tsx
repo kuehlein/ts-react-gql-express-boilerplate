@@ -1,18 +1,20 @@
 import { InMemoryCache } from "apollo-cache-inmemory";
 import ApolloClient from "apollo-client";
 // import { ApolloLink } from "apollo-link"; // ! not really sure what is going on here
-import { HttpLink } from "apollo-link-http";
+import { createHttpLink } from "apollo-link-http";
 import React, { Component } from "react";
 import { ApolloProvider } from "react-apollo";
-import { hot } from "react-hot-loader";
+import { ReactCookieProps, withCookies } from "react-cookie";
 import { Provider } from "react-redux";
 
+import { LOGOUT } from "../../queries";
 import rootStore from "../../store";
 import "./app.css";
 
 // import Routes from './routes'
 
 import { Navbar, SignupAndLogin } from "../";
+import { ISignupAndLoginProps } from "../SignupAndLogin/types";
 
 // If you use React Router, make this component
 // render <Router> with your routes. Currently,
@@ -21,8 +23,10 @@ import { Navbar, SignupAndLogin } from "../";
 // You can ignore this warning. For details, see:
 // https://github.com/reactjs/react-router/issues/2182
 
-interface IAppState {
-  formType: "Signup" | "Login";
+interface IAppProps extends ReactCookieProps {}
+
+interface IAppState extends ISignupAndLoginProps {
+  cookies: string;
 }
 
 /**
@@ -31,29 +35,33 @@ interface IAppState {
  * The `Provider` for the Redux store, the `Provider` for the GraphQL Client,
  * and the React Router `routes` are applied to the app here.
  */
-class App extends Component<{}, IAppState> {
+class App extends Component<IAppProps, IAppState> {
   /**
    * The instance of the GraphQL Apollo Client.
    */
   private gqlClient = new ApolloClient({
     cache: new InMemoryCache({ dataIdFromObject: object => object.id || null }),
-    link: new HttpLink({
+    link: createHttpLink({
       credentials: "include",
       includeExtensions: true,
-      uri: "http://localhost:4000/graphql",
+      uri: "/graphql",
       useGETForQueries: true
     })
   });
 
-  constructor(props: {}) {
+  constructor(props: IAppProps) {
     super(props);
     this.state = {
+      cookies: (this.props && this.props.cookies.get("connect.sid")) || "",
       formType: "Signup"
     };
     this.handleClick = this.handleClick.bind(this);
   }
 
   public render() {
+    console.log("in props", this.props.cookies);
+    console.log("in state", this.state.cookies);
+
     return (
       <Provider store={rootStore}>
         <ApolloProvider client={this.gqlClient}>
@@ -61,21 +69,30 @@ class App extends Component<{}, IAppState> {
             <Navbar
               formType={this.state.formType}
               handleClick={this.handleClick}
+              userCookie={this.state.cookies}
             />
             <hr />
             <SignupAndLogin formType={this.state.formType} />
           </div>
-          {/* <UserInfo formType={this.state.isSignup ? "Signup" : "Login"} /> */}
         </ApolloProvider>
       </Provider>
     );
   }
 
-  public handleClick(type: IAppState["formType"]) {
+  public handleClick(type?: IAppState["formType"], client?: ApolloClient<any>) {
     if (this.state.formType !== type) {
       this.setState({ formType: type });
+    }
+    // ! else if ???
+    if (client) {
+      client
+        .query({ query: LOGOUT })
+        .then((data: any) => console.log(data))
+        .then(() => this.props.cookies.remove("connect.sid"))
+        .then(() => client.resetStore())
+        .catch((error: any) => console.error(error));
     }
   }
 }
 
-export default hot(module)(App);
+export default withCookies(App);

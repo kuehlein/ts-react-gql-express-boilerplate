@@ -1,29 +1,48 @@
+import ApolloClient from "apollo-client";
 import React, { SFC } from "react";
+import { ApolloConsumer } from "react-apollo";
 
 interface INavbarProps {
-  formType: "Signup" | "Login";
-  handleClick: (type: INavbarProps["formType"]) => void;
+  userCookie: string;
+  formType: "Signup" | "Login" | "Logout";
+  handleClick: (
+    type?: INavbarProps["formType"],
+    client?: ApolloClient<any>
+  ) => void;
 }
 
 /**
  * Navbar...
  */
-const Navbar: SFC<INavbarProps> = ({ formType, handleClick }) => {
+const Navbar: SFC<INavbarProps> = ({ userCookie, formType, handleClick }) => {
+  // cookies.load("connect.sid"); // ???
+  console.log("userCookie", userCookie);
+
   return (
     <div>
       <h2>logo</h2>
-      <button
-        disabled={formType === "Signup"}
-        onClick={() => handleClick("Signup")}
-      >
-        Singup
-      </button>
-      <button
-        disabled={formType === "Login"}
-        onClick={() => handleClick("Login")}
-      >
-        Login
-      </button>
+      {!userCookie ? (
+        <>
+          <button
+            disabled={formType === "Signup"}
+            onClick={() => handleClick("Signup")}
+          >
+            Singup
+          </button>
+          <button
+            disabled={formType === "Login"}
+            onClick={() => handleClick("Login")}
+          >
+            Login
+          </button>
+        </>
+      ) : (
+        <ApolloConsumer>
+          {client => (
+            <button onClick={() => handleClick(null, client)}>Logout</button>
+          )}
+        </ApolloConsumer>
+      )}
     </div>
   );
 };

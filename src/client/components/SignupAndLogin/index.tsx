@@ -1,12 +1,12 @@
-import { ApolloQueryResult } from "apollo-client";
+import { ApolloClient } from "apollo-client";
 import _ from "lodash";
 import React, { Component } from "react";
 import { MutationFn, OperationVariables } from "react-apollo";
 
 import "./signupAndLogin.css";
 
-import { User } from "../../../server/db";
 import { LOGIN } from "../../queries";
+import { encryptReqData } from "../utils";
 import Form from "./Form";
 import { ILoginState, ISignupAndLoginProps, ISignupState } from "./types.d";
 
@@ -70,7 +70,7 @@ export default class SignupAndLogin extends Component<
    */
   private handleSubmit(
     signup?: MutationFn<OperationVariables>,
-    login?: ({}) => Promise<ApolloQueryResult<User["id"]>>
+    client?: ApolloClient<any>
   ): void {
     // * during login, `this.state.username` is either
     // * email or username
@@ -84,16 +84,18 @@ export default class SignupAndLogin extends Component<
 
     if (signup) {
       signup({
-        variables: newUser
+        variables: encryptReqData(newUser)
       })
         .then(data => console.log(data))
         .catch(error => console.error(error));
     } else {
-      login({
-        query: LOGIN,
-        variables: newUser
-      })
+      client
+        .query({
+          query: LOGIN,
+          variables: encryptReqData(newUser)
+        })
         .then(data => console.log(data))
+        .then(() => client.resetStore()) // ! do on logout too
         .catch(error => console.error(error));
     }
 

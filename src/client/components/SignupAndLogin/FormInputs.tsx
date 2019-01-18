@@ -2,7 +2,12 @@ import _ from "lodash";
 import React, { SFC } from "react";
 
 import { isEmail } from "../../../utils";
-import { IFormInputsProps, ILoginState, ISignupState } from "./types";
+import {
+  IFormInputsProps,
+  ILoginState,
+  ISignupAndLoginProps,
+  ISignupState
+} from "./types";
 
 /**
  * Utility function to check for a valid input for email,
@@ -11,7 +16,7 @@ import { IFormInputsProps, ILoginState, ISignupState } from "./types";
 const checkForValidInput = (
   user: ISignupState,
   key: keyof ILoginState,
-  formType?: "Signup" | "Login"
+  formType?: ISignupAndLoginProps["formType"]
 ) => {
   if (!user[key] || formType === "Login") return true;
   if (key === "email") return isEmail(user.email);
@@ -22,7 +27,7 @@ const checkForValidInput = (
 };
 
 interface IDynamicLoginInputs extends IFormInputsProps {
-  formType?: "Signup" | "Login";
+  formType?: ISignupAndLoginProps["formType"];
 }
 
 /**

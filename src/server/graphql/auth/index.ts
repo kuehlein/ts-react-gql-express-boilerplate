@@ -83,11 +83,13 @@ export const login = async (
 /**
  * Logs out the currently logged in user, and destroys the session.
  */
-export const logout = (req: Request): string => {
-  console.log("hit");
+export const logout = (req: Request): User => {
+  const user = req.user;
+
   req.logout();
   req.session.destroy(err => {
     if (err) console.log("Session was not destroyed", err);
   });
-  return "logged out???"; // ! ???
+
+  return user;
 };

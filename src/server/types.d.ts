@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request } from "express";
 import { User } from "./db";
 import { Connection } from "typeorm";
 
