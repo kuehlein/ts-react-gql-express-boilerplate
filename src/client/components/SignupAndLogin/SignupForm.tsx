@@ -1,24 +1,19 @@
 import { ApolloClient } from "apollo-client";
 import _ from "lodash";
 import React, { SFC } from "react";
-import {
-  ApolloConsumer,
-  Mutation,
-  MutationFn,
-  OperationVariables
-} from "react-apollo";
-import { hot } from "react-hot-loader";
+import { Mutation, MutationFn, OperationVariables } from "react-apollo";
+import { Link } from "react-router-dom";
 
 import { SIGNUP } from "../../queries";
+import { Form } from "../Materials";
 import ConfirmInputs from "./ConfirmInputs";
 import FormInputs from "./FormInputs";
-import { ISignupAndLoginProps, ISignupState } from "./types";
+import { ISignupState } from "./types";
 
 /**
  * Props recievied from `SignupAndLogin`, and passed down to input components.
  */
 interface IFormProps {
-  formType: ISignupAndLoginProps["formType"];
   handleChange: (key: keyof ISignupState, value: string) => void;
   handleSubmit: (
     signup?: MutationFn<OperationVariables>,
@@ -31,68 +26,39 @@ interface IFormProps {
  * Template for `SignupAndLogin` form based on whether the state is
  * currently `Signup` or `Login`.
  */
-const Form: SFC<IFormProps> = ({
-  formType,
-  handleChange,
-  handleSubmit,
-  user
-}) => {
+const SignupForm: SFC<IFormProps> = ({ handleChange, handleSubmit, user }) => {
   const debouncedHandleChange = _.debounce(handleChange, 300);
   const eventHandler = (key: keyof ISignupState, value: string) =>
     debouncedHandleChange(key, value);
 
-  return formType === "Signup" ? (
+  return (
     <Mutation mutation={SIGNUP}>
       {(signup, { loading, error }) => (
         <>
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              handleSubmit(signup);
-            }}
+          <Form
+            args={[signup]}
+            handleSubmit={handleSubmit}
+            name="Signup"
+            redirect="/me"
           >
-            <h2>{formType}</h2>
             <div style={{ display: "flex" }}>
               <FormInputs
-                formType={formType}
+                formType={"Signup"}
                 handleChange={eventHandler}
                 user={user}
               />
               <ConfirmInputs handleChange={eventHandler} user={user} />
             </div>
-            <button type="Submit">{formType}</button>
-          </form>
+          </Form>
           {loading && <p>Loading...</p>}
           {error && <p>Error :( Please try again</p>}
         </>
       )}
     </Mutation>
-  ) : (
-    <ApolloConsumer>
-      {client => (
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            handleSubmit(null, client);
-          }}
-        >
-          <h2>{formType}</h2>
-          <div style={{ display: "flex" }}>
-            <FormInputs
-              formType={formType}
-              handleChange={handleChange}
-              user={user}
-            />
-          </div>
-          <button type="Submit">{formType}</button>
-        </form>
-      )}
-    </ApolloConsumer>
   );
 };
 
-Form.defaultProps = {
-  formType: "Signup",
+SignupForm.defaultProps = {
   handleChange: () => {},
   handleSubmit: () => {},
   user: {
@@ -104,4 +70,4 @@ Form.defaultProps = {
   }
 };
 
-export default hot(module)(Form);
+export default SignupForm;

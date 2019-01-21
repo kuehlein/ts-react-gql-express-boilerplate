@@ -43,8 +43,13 @@ export const resolver: IResolvers = {
   Query: {
     login: async (parent, args, { req }: IContext): Promise<User> =>
       await login(req, args as ISignupAndLogin),
-    logout: async (parent, args, { req, user }: IContext): Promise<User> => {
+    logout: async (
+      parent,
+      args,
+      { req, user }: IContext
+    ): Promise<User | string> => {
       if (user) return await logout(req);
+      return "No users currently authenticated.";
       // ! how to handle no user??
     }
     // me: (parent, args, { req }: IContext) => JSON.stringify(req.user),

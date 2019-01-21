@@ -6,7 +6,7 @@
  * is constructed.
  */
 export interface ISignupAndLoginProps {
-  formType: "Signup" | "Login" | "Logout";
+  formType: "Signup" | "Login";
 }
 
 /**

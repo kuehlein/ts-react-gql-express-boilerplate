@@ -7,7 +7,8 @@ import "./signupAndLogin.css";
 
 import { LOGIN } from "../../queries";
 import { encryptReqData } from "../utils";
-import Form from "./Form";
+import LoginForm from "./LoginForm";
+import SignupForm from "./SignupForm";
 import { ILoginState, ISignupAndLoginProps, ISignupState } from "./types.d";
 
 /**
@@ -41,9 +42,14 @@ export default class SignupAndLogin extends Component<
   }
 
   public render() {
-    return (
-      <Form
-        formType={this.props.formType}
+    return this.props.formType === "Signup" ? (
+      <SignupForm
+        handleChange={this.handleChange}
+        handleSubmit={this.handleSubmit}
+        user={this.state}
+      />
+    ) : (
+      <LoginForm
         handleChange={this.handleChange}
         handleSubmit={this.handleSubmit}
         user={this.state}
@@ -95,7 +101,7 @@ export default class SignupAndLogin extends Component<
           variables: encryptReqData(newUser)
         })
         .then(data => console.log(data))
-        .then(() => client.resetStore()) // ! do on logout too
+        .then(() => client.resetStore())
         .catch(error => console.error(error));
     }
 
