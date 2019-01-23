@@ -1,5 +1,17 @@
 import chalk from "chalk";
 
+interface IDesigns {
+  error: string;
+  log: string;
+  warn: string;
+}
+
+interface IColors {
+  error: "redBright";
+  log: "cyanBright";
+  warn: "yellow";
+}
+
 /**
  * Formats and colors logs to the console given a `status` ("log" | "warn" | "error")
  * and any number of strings you may wish to pass. NOTE: you can style the input strings (using
@@ -9,8 +21,8 @@ export const prettyLogger = (
   status: "log" | "warn" | "error",
   ...text: string[]
 ): void => {
-  const indent: string = "              ";
-  const designs: {} = {
+  const indent: string = "             ";
+  const designs: IDesigns = {
     error: chalk.reset.redBright(
       "\n#########################################################"
     ),
@@ -21,11 +33,12 @@ export const prettyLogger = (
       "\n*********************************************************"
     )
   };
-  const colors: {} = {
+  const colors: IColors = {
     error: "redBright",
     log: "cyanBright",
     warn: "yellow"
   };
+
   const styledText: string[] = text.map(sentence =>
     chalk.bold[colors[status]]("\n" + indent + sentence)
   );
@@ -33,4 +46,17 @@ export const prettyLogger = (
   console[status](designs[status]);
   console[status](...styledText);
   console[status](designs[status] + "\n");
+};
+
+/**
+ * Given a `condition`, throw an error if `true` using the given `fail` message, and if
+ * `false` return the optional `success` argument, or `undefined` if no success is provided.
+ */
+export const throwIfError = (
+  condition: boolean,
+  fail: string,
+  success?: any
+): any => {
+  if (condition) throw new Error(fail);
+  return success;
 };

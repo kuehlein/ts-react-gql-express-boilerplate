@@ -1,12 +1,16 @@
-import Sequelize from "sequelize";
+import { createConnection } from "typeorm";
 
-const db = new Sequelize(
-  process.env.DATABASE_URL ||
-    "postgres://localhost:5432/ts-react-gql-express-boilerplate",
-  {
-    logging: false,
-    operatorsAliases: false
-  }
-);
-
-export default db;
+export default createConnection({
+  cli: {
+    entitiesDir: "ts-sourcemap/server/db/entities"
+  },
+  database: "ts_react_gql_express_boilerplate",
+  entities: ["ts-sourcemap/server/db/entities/*.js"],
+  host: "localhost",
+  logging: false,
+  password: "password",
+  port: 5432,
+  synchronize: process.env.NODE_ENV !== "production",
+  type: "postgres",
+  username: "kyleuehlein"
+});

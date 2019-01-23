@@ -2,6 +2,7 @@ import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
 import { Configuration, HotModuleReplacementPlugin } from "webpack";
+import FilterWarningsPlugin from "webpack-filter-warnings-plugin";
 
 // repeated config settings / paths
 const rootDir = [".."];
@@ -23,8 +24,27 @@ const plugins = [
   }),
   new ForkTsCheckerWebpackPlugin({
     checkSyntacticErrors: true,
-    tsconfig: path.resolve(__dirname, ...rootDir, "tsconfig.client.json"), // only checks client
+    tsconfig: path.resolve(
+      __dirname,
+      ...rootDir,
+      "configs",
+      "tsconfig.client.json"
+    ), // only checks client
     watch: path.resolve(__dirname, ...rootDir, "src", "client", "index.tsx")
+  }),
+  new FilterWarningsPlugin({
+    // suppress warnings from unused drivers with typeorm
+    exclude: [
+      /mongodb/,
+      /mssql/,
+      /mysql/,
+      /mysql2/,
+      /oracledb/,
+      /pg-native/,
+      /pg-query-stream/,
+      /redis/,
+      /sqlite3/
+    ]
   })
 ];
 
@@ -49,6 +69,7 @@ const devConfig: Configuration = {
           configFile: path.resolve(
             __dirname,
             ...rootDir,
+            "configs",
             "tsconfig.client.json"
           ),
           happyPackMode: true,

@@ -1,13 +1,15 @@
+import ApolloClient from "apollo-client";
 import React, { Component } from "react";
-import { hot } from "react-hot-loader";
-// import { Provider } from "react-redux";
+import { Cookies, withCookies } from "react-cookie";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 
 import "./app.css";
 
-// import Routes from './routes'
-// import store from "../store";
-
-import { SignupAndLogin } from "../";
+import { LOGOUT } from "../../queries";
+import Footer from "./Footer";
+import Main from "./Main";
+import Navbar from "./Navbar";
+import Routes from "./Routes";
 
 // If you use React Router, make this component
 // render <Router> with your routes. Currently,
@@ -16,30 +18,51 @@ import { SignupAndLogin } from "../";
 // You can ignore this warning. For details, see:
 // https://github.com/reactjs/react-router/issues/2182
 
-interface IState {
-  isSignup: boolean;
+interface IAppProps extends RouteComponentProps {
+  cookies?: Cookies;
 }
 
-class App extends Component<{}, IState> {
-  constructor(props) {
+interface IAppState {
+  userCookie: Cookies;
+}
+
+/**
+ * Main component...
+ */
+class App extends Component<IAppProps, IAppState> {
+  constructor(props: IAppProps) {
     super(props);
+    const { cookies } = this.props;
+
     this.state = {
-      isSignup: true
+      userCookie: cookies.get("connect.sid") || ""
     };
+    this.handleLogout = this.handleLogout.bind(this);
   }
 
   public render() {
+    const { userCookie } = this.state;
+
     return (
       <>
-        <SignupAndLogin formType={this.state.isSignup ? "signup" : "login"} />
-        <button
-          onClick={() => this.setState({ isSignup: !this.state.isSignup })}
-        >
-          {this.state.isSignup ? "Login" : "Signup"}
-        </button>
+        <Navbar handleLogout={this.handleLogout} userCookie={userCookie} />
+        <hr />
+        <Main>
+          <Routes userCookie={userCookie} />
+        </Main>
+        <Footer />
       </>
     );
   }
+
+  public handleLogout(client?: ApolloClient<any>) {
+    client
+      .query({ query: LOGOUT })
+      .then((data: any) => console.log(data))
+      .then(() => this.props.cookies.remove("connect.sid"))
+      .then(() => client.resetStore())
+      .catch((error: any) => console.error(error));
+  }
 }
 
-export default hot(module)(App);
+export default withCookies(withRouter(App));
