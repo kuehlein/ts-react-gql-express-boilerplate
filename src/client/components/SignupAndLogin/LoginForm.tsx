@@ -1,23 +1,9 @@
-import { ApolloClient } from "apollo-client";
 import _ from "lodash";
 import React, { SFC } from "react";
-import { ApolloConsumer, MutationFn, OperationVariables } from "react-apollo";
+import { ApolloConsumer } from "react-apollo";
 
-import { Form } from "../Materials";
-import FormInputs from "./FormInputs";
-import { ISignupState } from "./types";
-
-/**
- * Props recievied from `SignupAndLogin`, and passed down to input components.
- */
-interface IFormProps {
-  handleChange: (key: keyof ISignupState, value: string) => void;
-  handleSubmit: (
-    signup?: MutationFn<OperationVariables>,
-    client?: ApolloClient<any>
-  ) => void;
-  user: ISignupState;
-}
+import { MForm, MInput } from "../Materials";
+import { IFormProps, ISignupState } from "./types";
 
 /**
  * Template for `SignupAndLogin` form based on whether the state is
@@ -25,26 +11,37 @@ interface IFormProps {
  */
 const LoginForm: SFC<IFormProps> = ({ handleChange, handleSubmit, user }) => {
   const debouncedHandleChange = _.debounce(handleChange, 300);
-  const eventHandler = (key: keyof ISignupState, value: string) =>
-    debouncedHandleChange(key, value);
+  const eventHandler = (value: string, key: keyof ISignupState) =>
+    debouncedHandleChange(value, key);
 
   return (
     <ApolloConsumer>
       {client => (
-        <Form
+        <MForm
           args={[null, client]}
+          // ! better way to tell user of invalid inputs
+          disableSubmit={!user.username || !user.password}
           handleSubmit={handleSubmit}
           name="Login"
           redirect="/me"
         >
-          <div style={{ display: "flex" }}>
-            <FormInputs
-              formType={"Login"}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <MInput
+              args={["username"]}
               handleChange={eventHandler}
-              user={user}
+              isRequired={true}
+              name="username/email" // ! messes up label
+              type={"email"}
+            />
+            <MInput
+              args={["password"]}
+              handleChange={eventHandler}
+              isRequired={true}
+              name="password"
+              type={"password"}
             />
           </div>
-        </Form>
+        </MForm>
       )}
     </ApolloConsumer>
   );

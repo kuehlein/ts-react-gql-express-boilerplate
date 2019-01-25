@@ -1,55 +1,92 @@
-import { ApolloClient } from "apollo-client";
-import _ from "lodash";
+import debounce from "lodash/debounce";
 import React, { SFC } from "react";
-import { Mutation, MutationFn, OperationVariables } from "react-apollo";
-import { Link } from "react-router-dom";
+import { Mutation } from "react-apollo";
 
+import { isValid } from "../../../utils";
 import { SIGNUP } from "../../queries";
-import { Form } from "../Materials";
-import ConfirmInputs from "./ConfirmInputs";
-import FormInputs from "./FormInputs";
-import { ISignupState } from "./types";
-
-/**
- * Props recievied from `SignupAndLogin`, and passed down to input components.
- */
-interface IFormProps {
-  handleChange: (key: keyof ISignupState, value: string) => void;
-  handleSubmit: (
-    signup?: MutationFn<OperationVariables>,
-    client?: ApolloClient<any>
-  ) => void;
-  user: ISignupState;
-}
+import { MForm, MInput } from "../Materials";
+import { IFormProps, ISignupState } from "./types";
+import { isFormValid } from "./utils";
 
 /**
  * Template for `SignupAndLogin` form based on whether the state is
  * currently `Signup` or `Login`.
  */
 const SignupForm: SFC<IFormProps> = ({ handleChange, handleSubmit, user }) => {
-  const debouncedHandleChange = _.debounce(handleChange, 300);
-  const eventHandler = (key: keyof ISignupState, value: string) =>
-    debouncedHandleChange(key, value);
+  const debouncedHandleChange = debounce(handleChange, 300);
+  const eventHandler = (value: string, key: keyof ISignupState) =>
+    debouncedHandleChange(value, key);
 
   return (
     <Mutation mutation={SIGNUP}>
       {(signup, { loading, error }) => (
         <>
-          <Form
+          <MForm
             args={[signup]}
+            disableSubmit={!isFormValid(user)}
             handleSubmit={handleSubmit}
             name="Signup"
             redirect="/me"
           >
-            <div style={{ display: "flex" }}>
-              <FormInputs
-                formType={"Signup"}
-                handleChange={eventHandler}
-                user={user}
-              />
-              <ConfirmInputs handleChange={eventHandler} user={user} />
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <MInput
+                  args={["username"]}
+                  handleChange={eventHandler}
+                  isRequired={true}
+                  name="username"
+                  style={
+                    isValid.username(user.username) || !user.username
+                      ? "std"
+                      : "invalid"
+                  }
+                  type={"text"}
+                />
+                <MInput
+                  args={["email"]}
+                  handleChange={eventHandler}
+                  isRequired={true}
+                  name="email"
+                  style={
+                    isValid.email(user.email) || !user.email ? "std" : "invalid"
+                  }
+                  type={"email"}
+                />
+                <MInput
+                  args={["password"]}
+                  handleChange={eventHandler}
+                  isRequired={true}
+                  name="password"
+                  style={
+                    isValid.password(user.password) || !user.password
+                      ? "std"
+                      : "invalid"
+                  }
+                  type={"password"}
+                />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <MInput
+                  args={["confirmEmail"]}
+                  handleChange={eventHandler}
+                  isRequired={true}
+                  name="confirmEmail"
+                  style={user.email === user.confirmEmail ? "std" : "invalid"}
+                  type={"email"}
+                />
+                <MInput
+                  args={["confirmPassword"]}
+                  handleChange={eventHandler}
+                  isRequired={true}
+                  name="confirmPassword" // ! password
+                  style={
+                    user.password === user.confirmPassword ? "std" : "invalid"
+                  }
+                  type={"password"}
+                />
+              </div>
             </div>
-          </Form>
+          </MForm>
           {loading && <p>Loading...</p>}
           {error && <p>Error :( Please try again</p>}
         </>

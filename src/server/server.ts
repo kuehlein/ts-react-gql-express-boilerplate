@@ -300,6 +300,7 @@ export default class Server {
 
     // sends index.html
     this.instance.use("*", (req, res) => {
+      console.log("i am the lil meem", req.path);
       res.sendFile(path.join(__dirname, ...rootDir, "public", "index.html"));
     });
   }

@@ -66,7 +66,7 @@ export default class SignupAndLogin extends Component<
   /**
    * Updates the react state with a given input and a given value.
    */
-  private handleChange(key: keyof ISignupState, value: string): void {
+  private handleChange(value: string, key: keyof ISignupState): void {
     this.setState({ [key]: value } as Pick<ISignupState, keyof ISignupState>);
   }
 

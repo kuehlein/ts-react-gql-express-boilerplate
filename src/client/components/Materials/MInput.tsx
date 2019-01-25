@@ -1,19 +1,10 @@
 import startCase from "lodash/startCase";
 import React, { SFC } from "react";
 
-import { isEmail } from "../../../utils";
+const materials = require("./materials.css");
 
-/**
- * Utility function to check for a valid input for email,
- * username and password.
- */
-const checkForValidInput = {
-  email: (field: string): string => (isEmail(field) ? "" : "invalid"),
-  password: (field: string): string => (field.length > 7 ? "" : "invalid"),
-  username: (field: string): string => (field.length > 3 ? "" : "invalid")
-};
-
-interface IFormInputProps {
+interface IMInputProps {
+  args?: any[];
   autoComplete?: "on" | "off";
   autoCorrect?: "on" | "off";
   autoFocus?: boolean;
@@ -23,16 +14,37 @@ interface IFormInputProps {
   isRequired?: boolean;
   maxLength?: number;
   name: string;
-  pattern?: string;
   placeholder?: string;
   shouldSpellcheck?: boolean;
-  value: string;
+  style?: "form" | "invalid" | "std"; // TODO: add more...
+  type?:
+    | "text"
+    | "password"
+    | "submit"
+    | "reset"
+    | "radio"
+    | "checkbox"
+    | "button"
+    | "color"
+    | "date"
+    | "datetime-local"
+    | "email"
+    | "month"
+    | "number"
+    | "range"
+    | "search"
+    | "tel"
+    | "time"
+    | "url"
+    | "week";
+  value?: string;
 }
 
 /**
  *
  */
-const FormInput: SFC<IFormInputProps> = ({
+const MInput: SFC<IMInputProps> = ({
+  args = [],
   autoComplete = "off",
   autoCorrect = "off",
   autoFocus = false,
@@ -42,10 +54,11 @@ const FormInput: SFC<IFormInputProps> = ({
   isRequired = false,
   maxLength = Infinity,
   name,
-  pattern,
   placeholder = "", // ! ???
   shouldSpellcheck = false,
-  value
+  style = "std",
+  type = "text",
+  value // ! ???
 }) => {
   const formattedName = startCase(name);
 
@@ -56,27 +69,25 @@ const FormInput: SFC<IFormInputProps> = ({
         autoComplete={autoComplete}
         autoCorrect={autoCorrect}
         autoFocus={autoFocus}
-        className={checkForValidInput[name](value)}
+        className={materials[`${style}-input`]}
         disabled={isDisabled}
         maxLength={maxLength}
         name={name}
-        onChange={event => handleChange(event.target.value, name)}
-        pattern={pattern}
+        onChange={event => handleChange(event.target.value, ...args)}
         placeholder={placeholder || formattedName}
         readOnly={isReadOnly}
         required={isRequired}
         spellCheck={shouldSpellcheck}
-        type={name === "password" ? "password" : "text"}
+        type={type}
       />
     </label>
   );
 };
 
-FormInput.defaultProps = {
+MInput.defaultProps = {
   handleChange: () => {},
-  name: "",
-  shouldSpellcheck: false,
-  value: ""
+  name: ""
+  // value: ""
 };
 
-export default FormInput;
+export default MInput;

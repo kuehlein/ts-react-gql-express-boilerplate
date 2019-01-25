@@ -1,3 +1,6 @@
+import { ApolloClient } from "apollo-client";
+import { MutationFn, OperationVariables } from "react-apollo";
+
 // Various types used in multiple places throughout `SignupAndLogin/`
 
 /**
@@ -10,11 +13,14 @@ export interface ISignupAndLoginProps {
 }
 
 /**
- * Props recieved by input fields for both `Signup` and `Login`
+ * Props recievied from `SignupAndLogin`, and passed down to input components.
  */
-export interface IFormInputsProps {
-  handleChange: (key: keyof ISignupState, value: string) => void;
-  field?: keyof ILoginState | keyof IConfirmFields;
+export interface IFormProps {
+  handleChange: (value: string, key: keyof ISignupState) => void;
+  handleSubmit: (
+    signup?: MutationFn<OperationVariables>,
+    client?: ApolloClient<any>
+  ) => void;
   user: ISignupState;
 }
 
@@ -42,3 +48,18 @@ export interface ILoginState {
  * fields, as well as the confirmation fields.
  */
 export type ISignupState = ILoginState & IConfirmFields;
+
+/**
+ * !
+ * !
+ * ! FIGURE OUT SIGNUP VS. LOGIN STATE
+ * !
+ * !   - can i redo this?
+ * !
+ * !
+ * !
+ * !
+ * !
+ * !
+ * !
+ */

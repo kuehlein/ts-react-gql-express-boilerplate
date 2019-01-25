@@ -1,35 +1,41 @@
 import startCase from "lodash/startCase";
 import React, { SFC } from "react";
 
-import { Button } from "./index";
+import { MButton } from "./index";
 
-interface IFormInputProps {
+interface IMFormProps {
   args?: any[];
-  handleSubmit: (...args: any[]) => any;
+  disableSubmit?: boolean;
+  handleSubmit: (...args: any[]) => void;
   name: string;
   redirect?: string;
-  style?: "signup-login" | ""; // ! ???
+  style?: "signup-login" | "std"; // ! ???
 }
 
 /**
  * form boi...
  */
-const FormInput: SFC<IFormInputProps> = ({
+const MForm: SFC<IMFormProps> = ({
   args = [],
   children,
+  disableSubmit = false,
   handleSubmit,
   name,
   redirect,
-  style
+  style = "std"
 }) => {
   return (
     <form className={`${style}-form`}>
       <label>
         <h2>{startCase(name)}</h2>
       </label>
+
+      {/* fields/inputs/etc. that Form will contain */}
       {children}
-      <Button
+
+      <MButton
         args={args}
+        disabled={disableSubmit}
         handleClick={handleSubmit}
         name="Submit"
         style="submit"
@@ -39,9 +45,9 @@ const FormInput: SFC<IFormInputProps> = ({
   );
 };
 
-FormInput.defaultProps = {
+MForm.defaultProps = {
   handleSubmit: () => {},
   name: ""
 };
 
-export default FormInput;
+export default MForm;

@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { ISignupAndLogin } from "../../../types";
-import { isEmail } from "../../../utils";
+import { isValid } from "../../../utils";
 
 /**
  * Adds the user's information to the request body
@@ -21,4 +21,4 @@ export const addUserToReq = (
  * and returns a either `"email"` or `"username"`.
  */
 export const checkEmailOrUsername = (str: string): "email" | "username" =>
-  isEmail(str) ? "email" : "username";
+  isValid.email(str) ? "email" : "username";

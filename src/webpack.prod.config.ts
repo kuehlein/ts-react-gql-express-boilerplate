@@ -1,6 +1,8 @@
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import OptimizeCssAssetsPlugin from "optimize-css-assets-webpack-plugin";
 import path from "path";
+import UglifyJsPlugin from "uglifyjs-webpack-plugin";
 import { Configuration, optimize } from "webpack";
-import UglifyJsPlugin from "webpack-uglify-js-plugin";
 
 // repeated config settings / paths
 const rootDir = [".."];
@@ -14,10 +16,18 @@ const include = path.resolve(
 );
 
 // production plugins
-const plugins = [new optimize.ModuleConcatenationPlugin()];
+const plugins = [
+  new optimize.ModuleConcatenationPlugin(),
+  new MiniCssExtractPlugin({
+    chunkFilename: "[id].[hash].css",
+    filename: "[name].[hash].css"
+  }),
+  new OptimizeCssAssetsPlugin({})
+];
 const minimizer = [
   new UglifyJsPlugin({
-    parallel: { cache: false },
+    cache: true,
+    parallel: true,
     uglifyOptions: {
       compress: {
         comparisons: true,
@@ -52,8 +62,14 @@ const prodConfig: Configuration = {
     rules: [
       {
         exclude,
-        test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        loader: MiniCssExtractPlugin.loader,
+        options: {},
+        test: /\.css$/
+      },
+      {
+        exclude,
+        loader: "css-loader",
+        test: /\.css$/
       },
       {
         exclude,

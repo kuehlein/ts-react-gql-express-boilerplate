@@ -4,7 +4,7 @@ import { ApolloConsumer } from "react-apollo";
 import { Cookies } from "react-cookie";
 import { Link } from "react-router-dom";
 
-import { Button } from "../Materials";
+import { MButton } from "../Materials";
 
 interface INavbarProps {
   userCookie: Cookies;
@@ -14,39 +14,37 @@ interface INavbarProps {
 /**
  * Navbar...
  */
-const Navbar: SFC<INavbarProps> = ({ handleLogout, userCookie }) => {
-  return (
-    <>
-      <h2>
-        <Link to="/">logo</Link>
-      </h2>
-      {!userCookie ? (
-        <>
-          <Button
-            // disabled={formType === "Signup"}
-            name="Signup"
-            redirect="signup"
+const Navbar: SFC<INavbarProps> = ({ handleLogout, userCookie }) => (
+  <>
+    <h2>
+      <Link to="/">logo</Link>
+    </h2>
+    {!userCookie ? (
+      <>
+        <MButton
+          disabled={window.location.pathname === "/signup"}
+          name="Signup"
+          redirect="signup"
+        />
+        <MButton
+          disabled={window.location.pathname === "/login"}
+          name="Login"
+          redirect="login"
+        />
+      </>
+    ) : (
+      <ApolloConsumer>
+        {client => (
+          <MButton
+            args={[client]}
+            handleClick={handleLogout}
+            name="Logout"
+            redirect="/"
           />
-          <Button
-            // disabled={formType === "Login"}
-            name="Login"
-            redirect="login"
-          />
-        </>
-      ) : (
-        <ApolloConsumer>
-          {client => (
-            <Button
-              args={[client]}
-              handleClick={handleLogout}
-              name="Logout"
-              redirect="/"
-            />
-          )}
-        </ApolloConsumer>
-      )}
-    </>
-  );
-};
+        )}
+      </ApolloConsumer>
+    )}
+  </>
+);
 
 export default Navbar;

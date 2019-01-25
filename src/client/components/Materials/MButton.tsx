@@ -2,26 +2,26 @@ import React, { SFC } from "react";
 
 import history from "../../history";
 
-interface IButtonProps {
+interface IMButtonProps {
   args?: any[];
   disabled?: boolean;
-  handleClick?: (...args: any[]) => any;
+  handleClick?: (...args: any[]) => void;
   name: string;
   redirect?: string;
-  style?: "submit" | "";
+  style?: "submit" | "std";
   type?: "submit" | "reset";
 }
 
 /**
  * generic button
  */
-const Button: SFC<IButtonProps> = ({
+const MButton: SFC<IMButtonProps> = ({
   args = [],
   disabled = false,
   handleClick = () => {},
   name,
   redirect,
-  style,
+  style = "std",
   type = "button"
 }) => (
   <button
@@ -38,9 +38,8 @@ const Button: SFC<IButtonProps> = ({
   </button>
 );
 
-Button.defaultProps = {
-  name: "",
-  style: ""
+MButton.defaultProps = {
+  name: ""
 };
 
-export default Button;
+export default MButton;
