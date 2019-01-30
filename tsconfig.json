@@ -12,7 +12,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "outDir": "./ts-sourcemap/",
+    "outDir": "./sourcemap/",
     "preserveConstEnums": true,
     "pretty": true,
     "removeComments": true,

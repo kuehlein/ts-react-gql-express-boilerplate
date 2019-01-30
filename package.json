@@ -18,11 +18,11 @@
   },
   "scripts": {
     "postinstall": "touch secrets.js",
-    "seed": "tsc -p configs/tsconfig.scripts.json && NODE_ENV=development SEED_NUM=150 node ts-sourcemap/scripts/seed.js && echo \"\u001b[92;1mFinished seeding database.\u001b[0m\n\" && exit 0",
+    "seed": "tsc -p configs/tsconfig.scripts.json && NODE_ENV=development SEED_NUM=150 node sourcemap/scripts/seed.js && echo \"\u001b[92;1mFinished seeding database.\u001b[0m\n\" && exit 0",
     "prebuild": "apollo -c=config/apollo.config.js",
-    "dev": "NODE_ENV=development  HMR=disabled npx tsc-watch --onSuccess \"nodemon ts-sourcemap/server/index.js\" --onFailure \"echo \u001b[91;1mERROR: Compilation Failed ---\u001b[93;1m Fix errors to restart server.\u001b[0m\"",
-    "hot": "tsc && NODE_ENV=development HMR=enabled node ts-sourcemap/server/index.js",
-    "prod": "tsc && NODE_ENV=production npx webpack --config=ts-sourcemap/webpack.prod.config.js",
+    "dev": "NODE_ENV=development  HMR=disabled npx tsc-watch --onSuccess \"nodemon sourcemap/server/index.js\" --onFailure \"echo \u001b[91;1mERROR: Compilation Failed ---\u001b[93;1m Fix errors to restart server.\u001b[0m\"",
+    "hot": "tsc && NODE_ENV=development HMR=enabled node sourcemap/server/index.js",
+    "prod": "tsc && NODE_ENV=production npx webpack --config=sourcemap/webpack.prod.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "MIT",

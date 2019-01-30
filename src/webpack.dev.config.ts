@@ -59,7 +59,7 @@ const devConfig: Configuration = {
   context: path.resolve(__dirname, ...rootDir),
   devtool: "cheap-module-eval-source-map",
   entry: {
-    client: ["webpack-hot-middleware/client?&reload=true", include]
+    client: ["webpack-hot-middleware/client", include] // "webpack-hot-middleware/client?&reload=true"
   },
   mode: "development",
   module: {

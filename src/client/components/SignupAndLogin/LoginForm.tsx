@@ -1,6 +1,7 @@
 import _ from "lodash";
 import React, { SFC } from "react";
 import { ApolloConsumer } from "react-apollo";
+import { hot } from "react-hot-loader";
 
 import { MForm, MInput } from "../Materials";
 import { IFormProps, ISignupState } from "./types";
@@ -25,7 +26,13 @@ const LoginForm: SFC<IFormProps> = ({ handleChange, handleSubmit, user }) => {
           name="Login"
           redirect="/me"
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              backgroundColor: "green" // ! for HMR testing
+            }}
+          >
             <MInput
               args={["username"]}
               handleChange={eventHandler}
@@ -59,4 +66,4 @@ LoginForm.defaultProps = {
   }
 };
 
-export default LoginForm;
+export default hot(module)(LoginForm);

@@ -8,7 +8,7 @@ secrets.js
 /public/dist
 
 # js
-/ts-sourcemap
+/sourcemap
 
 # npm
 npm-debug.log

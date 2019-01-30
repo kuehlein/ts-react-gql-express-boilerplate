@@ -250,6 +250,7 @@ export default class Server {
   private webpackDevMiddleware(): void {
     const compiler: Compiler = webpack(config);
     this.instance.use(
+      // "*",
       webpackDevMiddleware(compiler, {
         logLevel: "warn",
         publicPath: config.output.publicPath,
@@ -258,20 +259,16 @@ export default class Server {
         }
       })
     );
+
     this.instance.use(
+      // "*",
       webpackHotMiddleware(compiler, {
         heartbeat: 2000,
         log: console.log,
         path: "",
-        reload: true
+        reload: false // true
       })
     );
-    this.instance.use("/", (req, res, next) => {
-      res.writeHead(200, {
-        Connection: "keep-alive",
-        "Content-Type": "text/event-stream"
-      });
-    });
   }
 
   /**
@@ -301,7 +298,16 @@ export default class Server {
     // sends index.html
     this.instance.use("*", (req, res) => {
       console.log("i am the lil meem", req.path);
-      res.sendFile(path.join(__dirname, ...rootDir, "public", "index.html"));
+
+      // ! for HMR
+      // tslint:disable-next-line:no-unused-expression
+      this.HMR === "enabled" &&
+        res.set({
+          Connection: "keep-alive",
+          "Content-Type": "text/event-stream"
+        });
+
+      // res.sendFile(path.join(__dirname, ...rootDir, "public", "index.html"));
     });
   }
 }
